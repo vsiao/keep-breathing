@@ -1,4 +1,10 @@
+
 .App {
+  --dark-blue: #140f2d;
+  --med-blue: #15616d;
+  --light-blue: #68c3d4;
+  --red: #d81e5b;
+  --yellow: #edae49;
   text-align: center;
 }
 
@@ -14,14 +20,23 @@
 }
 
 .App-header {
-  background-color: #282c34;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   font-size: calc(10px + 2vmin);
-  color: white;
+  color: var(--dark-blue);
+  position: relative;
+}
+
+.App-background {
+  background: linear-gradient(to bottom, var(--light-blue), var(--med-blue), var(--dark-blue));
+  height: 100%;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 100%;
 }
 
 .App-link {
