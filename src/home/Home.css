@@ -1,0 +1,31 @@
+.Home {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+}
+
+.Home-header {
+  font-size: 2.4em;
+  color: var(--dark-blue);
+}
+
+.Home-newGame {
+  background: var(--light-blue);
+  border: 0;
+  border-radius: .2em;
+  cursor: pointer;
+  color: var(--dark-blue);
+  font-size: 1.2em;
+  height: 2.4em;
+  margin-top: 1em;
+  padding: 0 1em;
+  transition: .15s background-color linear;
+}
+
+.Home-newGame:hover {
+  background: white;
+}
