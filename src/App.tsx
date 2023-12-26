@@ -54,9 +54,6 @@ function App() {
   return (
     <div className="App">
       <canvas ref={canvasRef} className="App-background"></canvas>
-      <header className="App-header">
-        keep breathing
-      </header>
       <Outlet />
     </div>
   );

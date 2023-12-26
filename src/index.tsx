@@ -1,9 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { Provider } from "react-redux";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import Home from './home/Home';
+import GameRoom from './game/GameRoom';
+import { store } from './store/store';
 
 const router = createBrowserRouter([
   {
@@ -12,8 +16,12 @@ const router = createBrowserRouter([
     errorElement: null,
     children: [
       {
-        path: "/rooms/:roomId",
-        element: null,
+        path: "/",
+        element: <Home />,
+      },
+      {
+        path: "/room/:roomId",
+        element: <GameRoom />,
       },
     ],
   },
@@ -24,7 +32,9 @@ const root = ReactDOM.createRoot(
 );
 root.render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <Provider store={store}>
+      <RouterProvider router={router} />
+    </Provider>
   </React.StrictMode>
 );
 
