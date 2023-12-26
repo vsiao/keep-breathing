@@ -13,7 +13,12 @@
 }
 
 .App-background {
-  background: linear-gradient(to bottom, var(--light-blue), var(--med-blue), var(--dark-blue));
+  background: linear-gradient(
+    to bottom,
+    var(--light-blue),
+    var(--med-blue),
+    var(--dark-blue)
+  );
   height: 100vh;
   left: 0;
   position: absolute;

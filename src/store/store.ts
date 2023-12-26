@@ -12,25 +12,25 @@ const firebaseConfig = {
   projectId: "keep-breathing",
   storageBucket: "keep-breathing.appspot.com",
   messagingSenderId: "38194117169",
-  appId: "1:38194117169:web:55d4dc067413678cb8b310"
+  appId: "1:38194117169:web:55d4dc067413678cb8b310",
 };
 
 const app = initializeApp(firebaseConfig);
 export const db = getDatabase(app);
 
 const auth = getAuth();
-onAuthStateChanged(auth, user => {
-    if (user) {
-        store.dispatch(authSlice.actions.setUserId(user.uid));
-    } else {
-        signInAnonymously(auth);
-    }
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    store.dispatch(authSlice.actions.setUserId(user.uid));
+  } else {
+    signInAnonymously(auth);
+  }
 });
 
 export const store = configureStore({
-    reducer: {
-      auth: authSlice.reducer,
-    },
+  reducer: {
+    auth: authSlice.reducer,
+  },
 });
 
 export type RootState = ReturnType<typeof store.getState>;

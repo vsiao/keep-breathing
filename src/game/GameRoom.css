@@ -1,100 +1,100 @@
 .GameRoom {
-    align-items: center;
-    display: flex;
-    justify-content: center;
-    height: 100vh;
-    position: relative;
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  height: 100vh;
+  position: relative;
 }
 
 .ColorPicker {
-    align-items: center;
-    display: flex;
-    flex-direction: column;
-    padding: .4em 0 .8em;
-    position: relative;
-    width: 18em;
-    z-index: 0;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  padding: 0.4em 0 0.8em;
+  position: relative;
+  width: 18em;
+  z-index: 0;
 }
 .ColorPicker::before {
-    background: rgba(255, 255, 255, .2);
-    border-radius: 1em;
-    content: "";
-    display: block;
-    height: 100%;
-    left: 0;
-    position: absolute;
-    top: 0;
-    width: 100%;
-    z-index: -1;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 1em;
+  content: "";
+  display: block;
+  height: 100%;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  z-index: -1;
 }
 
 .ColorPicker-list {
-    align-items: center;
-    align-self: stretch;
-    display: flex;
-    justify-content: space-evenly;
-    list-style: none;
-    margin: 0;
-    margin-top: .8em;
-    padding: 0;
+  align-items: center;
+  align-self: stretch;
+  display: flex;
+  justify-content: space-evenly;
+  list-style: none;
+  margin: 0;
+  margin-top: 0.8em;
+  padding: 0;
 }
 
 .ColorPicker-button {
-    align-items: center;
-    border: none;
-    border-radius: 1.2em;
-    box-shadow: 2px 2px 4px -2px var(--dark-blue);
-    color: white;
-    cursor: pointer;
-    display: flex;
-    font-weight: 600;
-    justify-content: center;
-    height: 2.4em;
-    position: relative;
-    width: 2.4em;
+  align-items: center;
+  border: none;
+  border-radius: 1.2em;
+  box-shadow: 2px 2px 4px -2px var(--dark-blue);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  font-weight: 600;
+  justify-content: center;
+  height: 2.4em;
+  position: relative;
+  width: 2.4em;
 }
 .ColorPicker-button--selected {
-    box-shadow: 0 0 0 2px #fff;
+  box-shadow: 0 0 0 2px #fff;
 }
 .ColorPicker-button:disabled {
-    cursor: default;
-    opacity: .5;
+  cursor: default;
+  opacity: 0.5;
 }
 .ColorPicker-button:disabled::before,
 .ColorPicker-button:disabled::after {
-    border-top: 2px solid var(--dark-blue);
-    content: "";
-    display: block;
-    left: 50%;
-    position: absolute;
-    transform: translateX(-50%) translateY(-50%) rotate(45deg);
-    top: 50%;
-    width: .8em;
+  border-top: 2px solid var(--dark-blue);
+  content: "";
+  display: block;
+  left: 50%;
+  position: absolute;
+  transform: translateX(-50%) translateY(-50%) rotate(45deg);
+  top: 50%;
+  width: 0.8em;
 }
 .ColorPicker-button:disabled::after {
-    transform: translateX(-50%) translateY(-50%) rotate(-45deg);
+  transform: translateX(-50%) translateY(-50%) rotate(-45deg);
 }
 .ColorPicker-button--red {
-    background: var(--red);
+  background: var(--red);
 }
 .ColorPicker-button--orange {
-    background: var(--orange);
+  background: var(--orange);
 }
 .ColorPicker-button--yellow {
-    background: var(--yellow);
+  background: var(--yellow);
 }
 .ColorPicker-button--green {
-    background: var(--green);
+  background: var(--green);
 }
 .ColorPicker-button--blue {
-    background: var(--blue);
+  background: var(--blue);
 }
 .ColorPicker-button--purple {
-    background: var(--purple);
+  background: var(--purple);
 }
 
 .ColorPicker-icon {
-    fill: #fff;
-    height: 1em;
-    width: 1em;
+  fill: #fff;
+  height: 1em;
+  width: 1em;
 }

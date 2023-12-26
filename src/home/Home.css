@@ -16,14 +16,14 @@
 .Home-newGame {
   background: var(--light-blue);
   border: 0;
-  border-radius: .2em;
+  border-radius: 0.2em;
   cursor: pointer;
   color: var(--dark-blue);
   font-size: 1.2em;
   height: 2.4em;
   margin-top: 1em;
   padding: 0 1em;
-  transition: .15s background-color linear;
+  transition: 0.15s background-color linear;
 }
 
 .Home-newGame:hover {
