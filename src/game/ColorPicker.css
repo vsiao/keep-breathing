@@ -1,0 +1,99 @@
+.ColorPicker {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  z-index: 0;
+}
+
+.ColorPicker-list {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  height: 100%;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+
+.ColorPicker-player {
+  align-items: center;
+  display: flex;
+  width: 100%;
+}
+
+.ColorPicker-button {
+  align-items: center;
+  border: none;
+  border-radius: 50%;
+  box-shadow: 2px 2px 4px -2px var(--dark-blue);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  font-weight: 600;
+  justify-content: center;
+  height: 1.6em;
+  margin-right: 1em;
+  position: relative;
+  width: 1.6em;
+}
+.ColorPicker-button--selected {
+  box-shadow: 0 0 0 2px #fff;
+}
+.ColorPicker-button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+.ColorPicker-button:disabled::before,
+.ColorPicker-button:disabled::after {
+  border-top: 2px solid var(--dark-blue);
+  content: "";
+  display: block;
+  left: 50%;
+  position: absolute;
+  transform: translateX(-50%) translateY(-50%) rotate(45deg);
+  top: 50%;
+  width: 0.8em;
+}
+.ColorPicker-button:disabled::after {
+  transform: translateX(-50%) translateY(-50%) rotate(-45deg);
+}
+.ColorPicker-button--red {
+  background: var(--red);
+}
+.ColorPicker-button--orange {
+  background: var(--orange);
+}
+.ColorPicker-button--yellow {
+  background: var(--yellow);
+}
+.ColorPicker-button--green {
+  background: var(--green);
+}
+.ColorPicker-button--blue {
+  background: var(--blue);
+}
+.ColorPicker-button--purple {
+  background: var(--purple);
+}
+
+.ColorPicker-icon {
+  fill: #fff;
+  height: 1em;
+  width: 1em;
+}
+
+.ColorPicker-hostTag {
+  background: var(--light-blue);
+  border-radius: 4px;
+  box-shadow: 0 0 0 2px var(--light-blue);
+  margin-left: 0.8em;
+  padding: 0 4px;
+}
+
+.ColorPicker-startGame {
+  margin-top: 1em;
+  position: absolute;
+  top: 100%;
+}

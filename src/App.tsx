@@ -80,7 +80,7 @@ class Bubble {
   draw(context: CanvasRenderingContext2D) {
     context.beginPath();
     context.arc(this.x, this.y, this.r, 0, 2 * Math.PI);
-    context.strokeStyle = "#68c3d4";
+    context.strokeStyle = "rgba(104, 195, 212, .2)";
     context.stroke();
   }
 

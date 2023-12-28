@@ -1,0 +1,30 @@
+.TitleCard-title {
+  color: var(--dark-blue);
+  font-size: 1.6em;
+  text-align: center;
+  width: 12em;
+}
+
+.TitleCard-card {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  height: 16em;
+  justify-content: space-evenly;
+  margin: 0;
+  padding: 0 1em;
+  position: relative;
+  z-index: 0;
+}
+.TitleCard-card::before {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 1em;
+  content: "";
+  display: block;
+  height: 100%;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  z-index: -1;
+}
