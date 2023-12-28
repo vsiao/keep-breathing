@@ -19,8 +19,8 @@ function GameRoom() {
 
   return (
     <div className="GameRoom">
-      {userId &&
-        (users[userId]?.name ? (
+      {userId && users[userId] ? (
+        users[userId].name ? (
           <GameLobby
             roomId={roomId}
             userId={userId}
@@ -30,7 +30,11 @@ function GameRoom() {
           />
         ) : (
           <GameRoomNameEntry roomId={roomId} userId={userId} />
-        ))}
+        )
+      ) : (
+        // users is loading; render placeholder
+        <TitleCard title={<>&nbsp;</>}>{null}</TitleCard>
+      )}
     </div>
   );
 }
