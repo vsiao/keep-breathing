@@ -11,11 +11,13 @@ function GameLobby({
   userId,
   users,
   playerColors,
+  startGame,
 }: {
   roomId: string;
   userId: string;
   users: RoomUsers;
   playerColors: Record<string, PlayerColor>;
+  startGame: () => void;
 }) {
   const [selectedColor, setColor] = useColorPicker({
     roomId,
@@ -62,7 +64,9 @@ function GameLobby({
         })}
       </ul>
       {users[userId].isHost && (
-        <Button className="GameLobby-startGame">start game</Button>
+        <Button className="GameLobby-startGame" onClick={startGame}>
+          start game
+        </Button>
       )}
     </TitleCard>
   );

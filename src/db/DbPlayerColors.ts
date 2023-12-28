@@ -59,12 +59,14 @@ export const useColorPicker = ({
     !selectedColor &&
     new Set(Object.values(playerColors)).size < MAX_NUM_PLAYERS;
 
+  // Clear color selection on disconnection
   useEffect(() => {
     let isActiveEffect = true;
     onDisconnect(ref)
       .update({ [userId]: null })
       .then(() => {
         if (needsColor && isActiveEffect) {
+          // Claim an unused color if needed
           setColor();
         }
       });
@@ -75,9 +77,9 @@ export const useColorPicker = ({
     };
   }, [ref, userId, needsColor, setColor]);
 
+  // Clear color selection on unmount
   useEffect(() => {
     return () => {
-      console.log("bye");
       update(ref, { [userId]: null });
     };
   }, [ref, userId]);

@@ -26,6 +26,7 @@ function GameRoom() {
             userId={userId}
             users={users}
             playerColors={playerColors}
+            startGame={() => {}}
           />
         ) : (
           <GameRoomNameEntry roomId={roomId} userId={userId} />
