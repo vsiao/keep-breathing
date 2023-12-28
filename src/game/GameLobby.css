@@ -41,24 +41,6 @@
 .GameLobby-button--selected {
   box-shadow: 0 0 0 2px #fff;
 }
-.GameLobby-button:disabled {
-  cursor: default;
-  opacity: 0.5;
-}
-.GameLobby-button:disabled::before,
-.GameLobby-button:disabled::after {
-  border-top: 2px solid var(--dark-blue);
-  content: "";
-  display: block;
-  left: 50%;
-  position: absolute;
-  transform: translateX(-50%) translateY(-50%) rotate(45deg);
-  top: 50%;
-  width: 0.8em;
-}
-.GameLobby-button:disabled::after {
-  transform: translateX(-50%) translateY(-50%) rotate(-45deg);
-}
 .GameLobby-button--red {
   background: var(--red);
 }
