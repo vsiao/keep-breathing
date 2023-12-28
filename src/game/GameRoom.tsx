@@ -4,7 +4,7 @@ import { ref, set } from "firebase/database";
 import { FormEventHandler, useState } from "react";
 import { useAppSelector } from "../store/store";
 import { selectUserId } from "../store/authSlice";
-import ColorPicker from "./ColorPicker";
+import GameLobby from "./GameLobby";
 import { db } from "../db/firebase";
 import { useDbPlayerColors } from "../db/DbPlayerColors";
 import { useDbRoomUsers } from "../db/DbRoomUsers";
@@ -21,7 +21,7 @@ function GameRoom() {
     <div className="GameRoom">
       {userId &&
         (users[userId]?.name ? (
-          <ColorPicker
+          <GameLobby
             roomId={roomId}
             userId={userId}
             users={users}

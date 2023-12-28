@@ -1,11 +1,11 @@
-.ColorPicker {
+.GameLobby {
   align-items: center;
   display: flex;
   flex-direction: column;
   z-index: 0;
 }
 
-.ColorPicker-list {
+.GameLobby-list {
   align-self: stretch;
   display: flex;
   flex-direction: column;
@@ -17,13 +17,13 @@
   position: relative;
 }
 
-.ColorPicker-player {
+.GameLobby-player {
   align-items: center;
   display: flex;
   width: 100%;
 }
 
-.ColorPicker-button {
+.GameLobby-button {
   align-items: center;
   border: none;
   border-radius: 50%;
@@ -38,15 +38,15 @@
   position: relative;
   width: 1.6em;
 }
-.ColorPicker-button--selected {
+.GameLobby-button--selected {
   box-shadow: 0 0 0 2px #fff;
 }
-.ColorPicker-button:disabled {
+.GameLobby-button:disabled {
   cursor: default;
   opacity: 0.5;
 }
-.ColorPicker-button:disabled::before,
-.ColorPicker-button:disabled::after {
+.GameLobby-button:disabled::before,
+.GameLobby-button:disabled::after {
   border-top: 2px solid var(--dark-blue);
   content: "";
   display: block;
@@ -56,35 +56,35 @@
   top: 50%;
   width: 0.8em;
 }
-.ColorPicker-button:disabled::after {
+.GameLobby-button:disabled::after {
   transform: translateX(-50%) translateY(-50%) rotate(-45deg);
 }
-.ColorPicker-button--red {
+.GameLobby-button--red {
   background: var(--red);
 }
-.ColorPicker-button--orange {
+.GameLobby-button--orange {
   background: var(--orange);
 }
-.ColorPicker-button--yellow {
+.GameLobby-button--yellow {
   background: var(--yellow);
 }
-.ColorPicker-button--green {
+.GameLobby-button--green {
   background: var(--green);
 }
-.ColorPicker-button--blue {
+.GameLobby-button--blue {
   background: var(--blue);
 }
-.ColorPicker-button--purple {
+.GameLobby-button--purple {
   background: var(--purple);
 }
 
-.ColorPicker-icon {
+.GameLobby-icon {
   fill: #fff;
   height: 1em;
   width: 1em;
 }
 
-.ColorPicker-hostTag {
+.GameLobby-hostTag {
   background: var(--light-blue);
   border-radius: 4px;
   box-shadow: 0 0 0 2px var(--light-blue);
@@ -92,7 +92,7 @@
   padding: 0 4px;
 }
 
-.ColorPicker-startGame {
+.GameLobby-startGame {
   margin-top: 1em;
   position: absolute;
   top: 100%;

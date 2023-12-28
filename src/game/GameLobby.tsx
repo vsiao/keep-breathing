@@ -1,12 +1,12 @@
 import classnames from "classnames";
 import { PLAYER_COLORS, PlayerColor } from "./config";
-import "./ColorPicker.css";
+import "./GameLobby.css";
 import { useColorPicker } from "../db/DbPlayerColors";
 import TitleCard from "../ui/TitleCard";
 import Button from "../ui/Button";
 import { RoomUsers } from "../db/DbRoomUsers";
 
-function ColorPicker({
+function GameLobby({
   roomId,
   userId,
   users,
@@ -25,19 +25,19 @@ function ColorPicker({
 
   return (
     <TitleCard title="Diver Manifest">
-      <ul className="ColorPicker-list">
+      <ul className="GameLobby-list">
         {PLAYER_COLORS.map((c) => {
           const uid = Object.entries(playerColors).find(
             ([, color]) => color === c,
           )?.[0];
           const user = uid ? users[uid] : undefined;
           return (
-            <li key={c} className="ColorPicker-player">
+            <li key={c} className="GameLobby-player">
               <button
                 className={classnames(
-                  "ColorPicker-button",
-                  `ColorPicker-button--${c}`,
-                  { "ColorPicker-button--selected": selectedColor === c },
+                  "GameLobby-button",
+                  `GameLobby-button--${c}`,
+                  { "GameLobby-button--selected": selectedColor === c },
                 )}
                 disabled={
                   selectedColor !== c && Object.values(playerColors).includes(c)
@@ -46,7 +46,7 @@ function ColorPicker({
               >
                 {selectedColor === c && (
                   <svg
-                    className="ColorPicker-icon"
+                    className="GameLobby-icon"
                     xmlns="https://www.w3.org/2000/svg"
                     version="1.1"
                     viewBox="0 0 17.837 17.837"
@@ -55,19 +55,17 @@ function ColorPicker({
                   </svg>
                 )}
               </button>
-              <span className="ColorPicker-playerName">{user?.name}</span>
-              {user?.isHost && (
-                <span className="ColorPicker-hostTag">host</span>
-              )}
+              <span className="GameLobby-playerName">{user?.name}</span>
+              {user?.isHost && <span className="GameLobby-hostTag">host</span>}
             </li>
           );
         })}
       </ul>
       {users[userId].isHost && (
-        <Button className="ColorPicker-startGame">start game</Button>
+        <Button className="GameLobby-startGame">start game</Button>
       )}
     </TitleCard>
   );
 }
 
-export default ColorPicker;
+export default GameLobby;
