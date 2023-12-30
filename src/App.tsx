@@ -1,15 +1,16 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Outlet } from "react-router-dom";
 import "./App.css";
 
 const bubbles = new Set<Bubble>();
 
 function App() {
-  const [windowDimensions, setWindowDimensions] = useState({
-    height: window.innerHeight,
-    width: window.innerWidth,
+  const [canvasDimensions, setCanvasDimensions] = useState({
+    height: document.body.clientHeight,
+    width: document.body.clientWidth,
   });
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const appRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -17,7 +18,7 @@ function App() {
     if (!canvas || !context) {
       return;
     }
-    const { height, width } = windowDimensions;
+    const { height, width } = canvasDimensions;
     canvas.height = height;
     canvas.width = width;
     let animation: number;
@@ -43,21 +44,26 @@ function App() {
     };
     animate();
     return () => cancelAnimationFrame(animation);
-  }, [windowDimensions]);
+  }, [canvasDimensions]);
 
   useEffect(() => {
-    const onResize = (event: UIEvent) => {
-      setWindowDimensions({
-        height: window.innerHeight,
-        width: window.innerWidth,
+    if (appRef.current) {
+      const observer = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          const { blockSize, inlineSize } = entry.borderBoxSize[0];
+          setCanvasDimensions({
+            width: inlineSize,
+            height: blockSize,
+          });
+        }
       });
-    };
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  });
+      observer.observe(appRef.current);
+      return () => observer.disconnect();
+    }
+  }, [setCanvasDimensions]);
 
   return (
-    <div className="App">
+    <div ref={appRef} className="App">
       <canvas ref={canvasRef} className="App-background"></canvas>
       <Outlet />
     </div>
@@ -80,7 +86,7 @@ class Bubble {
   draw(context: CanvasRenderingContext2D) {
     context.beginPath();
     context.arc(this.x, this.y, this.r, 0, 2 * Math.PI);
-    context.strokeStyle = "rgba(104, 195, 212, .2)";
+    context.strokeStyle = "rgba(255,255,255,.2)"; //"rgba(104, 195, 212, .2)";
     context.stroke();
   }
 

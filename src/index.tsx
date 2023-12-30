@@ -8,6 +8,7 @@ import reportWebVitals from "./reportWebVitals";
 import Home from "./home/Home";
 import GameRoom from "./game/GameRoom";
 import { store } from "./store/store";
+import HowTo from "./game/HowTo";
 
 const router = createBrowserRouter([
   {
@@ -18,6 +19,10 @@ const router = createBrowserRouter([
       {
         path: "/",
         element: <Home />,
+      },
+      {
+        path: "/howto",
+        element: <HowTo />,
       },
       {
         path: "/room/:roomId",

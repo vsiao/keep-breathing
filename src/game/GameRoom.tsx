@@ -10,6 +10,7 @@ import { useDbPlayerColors } from "../db/DbPlayerColors";
 import { useDbRoomUsers } from "../db/DbRoomUsers";
 import TitleCard from "../ui/TitleCard";
 import Button from "../ui/Button";
+import HowToButton from "../ui/HowToButton";
 
 function GameRoom() {
   const { roomId } = useParams() as { roomId: string };
@@ -35,6 +36,7 @@ function GameRoom() {
         // users is loading; render placeholder
         <TitleCard title={<>&nbsp;</>}>{null}</TitleCard>
       )}
+      <HowToButton />
     </div>
   );
 }

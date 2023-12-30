@@ -1,0 +1,22 @@
+.Loot-icon {
+  filter: drop-shadow(0 0 1px black)
+    drop-shadow(0 0 16px rgba(250, 130, 76, 0.8));
+}
+.Loot-icon--level1 {
+  fill: white;
+}
+.Loot-icon--level2 {
+  fill: var(--light-blue);
+}
+.Loot-icon--level3 {
+  fill: var(--med-blue);
+}
+.Loot-icon--level4 {
+  fill: var(--dark-blue);
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}

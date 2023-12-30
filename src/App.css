@@ -1,27 +1,12 @@
-.App {
-  --dark-blue: #140f2d;
-  --med-blue: #15616d;
-  --light-blue: #68c3d4;
-  --red: #d81e5b;
-  --orange: #fa824c;
-  --yellow: #edae49;
-  --green: #08a045;
-  --blue: #39a0ed;
-  --purple: #5b2a86;
-  color: var(--dark-blue);
-  font-size: 16px;
-}
-
 .App-background {
   background: linear-gradient(
     to bottom,
-    var(--light-blue),
-    var(--med-blue),
-    var(--dark-blue)
+    var(--light-blue) 0%,
+    var(--med-blue) 40%,
+    var(--dark-blue) 80%,
+    var(--ddark-blue) 100%
   );
-  height: 100vh;
   left: 0;
   position: absolute;
   top: 0;
-  width: 100vw;
 }
