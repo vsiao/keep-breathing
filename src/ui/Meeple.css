@@ -1,0 +1,23 @@
+.Meeple-icon {
+  filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, 0.2));
+  height: 1.6em;
+  width: 1.6em;
+}
+.Meeple-icon--red {
+  fill: var(--red);
+}
+.Meeple-icon--orange {
+  fill: var(--orange);
+}
+.Meeple-icon--yellow {
+  fill: var(--yellow);
+}
+.Meeple-icon--green {
+  fill: var(--green);
+}
+.Meeple-icon--blue {
+  fill: var(--blue);
+}
+.Meeple-icon--purple {
+  fill: var(--purple);
+}

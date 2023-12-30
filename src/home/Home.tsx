@@ -2,6 +2,7 @@ import { customAlphabet } from "nanoid";
 import { useNavigate } from "react-router-dom";
 import "./Home.css";
 import Button from "../ui/Button";
+import HowToButton from "../ui/HowToButton";
 
 const nanoid = customAlphabet("1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ");
 
@@ -19,6 +20,7 @@ function Home() {
       >
         new game
       </Button>
+      <HowToButton />
     </div>
   );
 }

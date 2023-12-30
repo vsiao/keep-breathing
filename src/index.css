@@ -1,3 +1,21 @@
+html,
+body {
+  --ddark-blue: #07021e;
+  --dark-blue: #140f2d;
+  --med-blue: #15616d;
+  --light-blue: #68c3d4;
+  --red: #d81e5b;
+  --orange: #fa824c;
+  --yellow: #edae49;
+  --green: #08a045;
+  --blue: #39a0ed;
+  --purple: #5b2a86;
+  background: var(--dark-blue);
+  color: var(--dark-blue);
+  font-size: 16px;
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
 }
@@ -44,4 +62,11 @@ input[type="text"][disabled] {
 }
 input[type="text"]::placeholder {
   color: var(--light-blue);
+}
+
+ol,
+li {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }

@@ -1,0 +1,41 @@
+.HowTo {
+  position: relative;
+  z-index: 0;
+}
+
+.HowTo-gameBoard {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.HowTo-submarine {
+  margin: 0.4em 0 0.8em;
+}
+
+.HowTo-space {
+  margin-bottom: 1em;
+}
+
+.HowTo-scoreCard {
+  position: fixed;
+  right: 1em;
+  top: 1em;
+  z-index: 100;
+}
+.HowTo-scoreCard::before {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 0.4em;
+  content: "";
+  display: block;
+  height: 100%;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  z-index: -1;
+}
+
+.HowTo-playerList {
+  padding: 0.4em;
+}
