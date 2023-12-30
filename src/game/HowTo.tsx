@@ -1,19 +1,9 @@
 import "./HowTo.css";
 import Submarine from "../ui/Submarine";
 import Loot from "../ui/Loot";
-import { useState } from "react";
-
-const STEPS = [
-  { desc: "Players take turns rolling dice to dive deep into the ocean." },
-  { desc: "Retrieve treasure from the depths and return to the submarine." },
-  {
-    desc: "Each piece of treasure you hold slows your progress, and burns more oxygen from the shared tank.",
-  },
-  { desc: "Collect treasure and make it back" },
-];
+import Meeple from "../ui/Meeple";
 
 function HowTo() {
-  const [step, setStep] = useState();
   return (
     <div className="HowTo">
       <div className="HowTo-gameBoard">
@@ -28,8 +18,12 @@ function HowTo() {
       </div>
       <div className="HowTo-scoreCard">
         <ol className="HowTo-playerList">
-          <li>P1</li>
-          <li>P2</li>
+          <li>
+            <Meeple color="red" />
+          </li>
+          <li>
+            <Meeple color="orange" />
+          </li>
         </ol>
       </div>
     </div>
