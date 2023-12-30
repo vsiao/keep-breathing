@@ -10,35 +10,43 @@ import { useDbPlayerColors } from "../db/DbPlayerColors";
 import { useDbRoomUsers } from "../db/DbRoomUsers";
 import TitleCard from "../ui/TitleCard";
 import Button from "../ui/Button";
-import HowToButton from "../ui/HowToButton";
+import Game from "./Game";
+import { startGame, useCurrentGameId } from "../db/DbRoom";
 
 function GameRoom() {
   const { roomId } = useParams() as { roomId: string };
   const userId = useAppSelector(selectUserId);
   const users = useDbRoomUsers(roomId, userId);
   const playerColors = useDbPlayerColors(roomId);
+  const gameId = useCurrentGameId(roomId);
 
-  return (
-    <div className="GameRoom">
-      {userId && users[userId] ? (
-        users[userId].name ? (
-          <GameLobby
-            roomId={roomId}
-            userId={userId}
-            users={users}
-            playerColors={playerColors}
-            startGame={() => {}}
-          />
-        ) : (
-          <GameRoomNameEntry roomId={roomId} userId={userId} />
-        )
-      ) : (
-        // users is loading; render placeholder
-        <TitleCard title={<>&nbsp;</>}>{null}</TitleCard>
-      )}
-      <HowToButton />
-    </div>
-  );
+  const renderRoomContents = () => {
+    if (gameId && userId) {
+      // In a game; render the game
+      return (
+        <Game roomId={roomId} gameId={gameId} userId={userId} users={users} />
+      );
+    }
+    if (!userId || !users[userId]) {
+      // users is loading; render placeholder
+      return <TitleCard title={<>&nbsp;</>}>{null}</TitleCard>;
+    }
+    if (!users[userId]?.name) {
+      // No name set yet; prompt for one
+      return <GameRoomNameEntry roomId={roomId} userId={userId} />;
+    }
+    return (
+      <GameLobby
+        roomId={roomId}
+        userId={userId}
+        users={users}
+        playerColors={playerColors}
+        startGame={() => startGame(roomId, users, playerColors)}
+      />
+    );
+  };
+
+  return <div className="GameRoom">{renderRoomContents()}</div>;
 }
 
 export default GameRoom;
