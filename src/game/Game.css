@@ -28,8 +28,31 @@
   margin: 0.4em 0 0.8em;
 }
 
+.Game-path {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
 .Game-space {
+  align-items: center;
+  display: flex;
+  height: 64px;
+  justify-content: center;
   margin-bottom: 1em;
+}
+
+.Game-players {
+  position: absolute;
+  top: 0;
+  z-index: 100;
+}
+
+.Game-controls {
+  bottom: 0;
+  padding: 1em 2em;
+  position: fixed;
 }
 
 .Game-scoreCard {

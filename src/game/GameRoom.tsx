@@ -11,21 +11,19 @@ import { useDbRoomUsers } from "../db/DbRoomUsers";
 import TitleCard from "../ui/TitleCard";
 import Button from "../ui/Button";
 import Game from "./Game";
-import { startGame, useCurrentGameId } from "../db/DbRoom";
+import { startGame, useDbRoomStatus } from "../db/DbRoom";
 
 function GameRoom() {
   const { roomId } = useParams() as { roomId: string };
   const userId = useAppSelector(selectUserId);
   const users = useDbRoomUsers(roomId, userId);
   const playerColors = useDbPlayerColors(roomId);
-  const gameId = useCurrentGameId(roomId);
+  const roomStatus = useDbRoomStatus(roomId);
 
   const renderRoomContents = () => {
-    if (gameId && userId) {
+    if (roomStatus === "playing" && userId) {
       // In a game; render the game
-      return (
-        <Game roomId={roomId} gameId={gameId} userId={userId} users={users} />
-      );
+      return <Game roomId={roomId} userId={userId} users={users} />;
     }
     if (!userId || !users[userId]) {
       // users is loading; render placeholder
