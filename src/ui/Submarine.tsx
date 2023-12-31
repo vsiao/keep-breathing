@@ -1,7 +1,15 @@
 import classnames from "classnames";
 import "./Submarine.css";
+import { PlayerState } from "../store/gameSlice";
+import Meeple from "./Meeple";
 
-function Submarine({ className }: { className?: string }) {
+function Submarine({
+  className,
+  players,
+}: {
+  className?: string;
+  players: PlayerState[];
+}) {
   return (
     <div className={classnames("Submarine", className)}>
       <svg
@@ -32,6 +40,13 @@ function Submarine({ className }: { className?: string }) {
         </g> */
         }
       </svg>
+      <ul className="Submarine-players">
+        {players?.map((p) => (
+          <li key={p.id} className="Submarine-player">
+            <Meeple color={p.color} layoutId="gameBoard" />
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

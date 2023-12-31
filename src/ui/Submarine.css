@@ -1,23 +1,25 @@
 .Submarine {
-  fill: url(#submarine-gradient) var(--dark-blue);
-  opacity: 0.8;
   position: relative;
   width: 480px;
-  z-index: 0;
+  z-index: 100;
 }
-.Submarine::before {
-  content: "";
-  background: linear-gradient(
-    to bottom,
-    black 20%,
-    var(--dark-blue) 50%,
-    black 80%
-  );
+
+.Submarine-svg {
   fill: url(#submarine-gradient) var(--dark-blue);
-  height: 32px;
-  left: 2em;
+  opacity: 0.8;
+}
+
+.Submarine-players {
+  display: flex;
+  left: 50%;
   position: absolute;
-  top: 50%;
-  width: 300px;
-  z-index: -1;
+  top: 60%;
+  transform: translateX(-50%);
+}
+
+.Submarine-player {
+  margin-left: 0.8em;
+}
+.Submarine-player:first-child {
+  margin: 0;
 }

@@ -1,4 +1,4 @@
-.HowTo {
+.Game {
   align-items: center;
   display: flex;
   flex-direction: column;
@@ -7,7 +7,7 @@
   z-index: 0;
 }
 
-.HowTo-gameBoard {
+.Game-board {
   align-items: center;
   animation: 3s fade-in ease-in;
   display: flex;
@@ -24,21 +24,44 @@
   }
 }
 
-.HowTo-submarine {
+.Game-submarine {
   margin: 0.4em 0 0.8em;
 }
 
-.HowTo-space {
+.Game-path {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.Game-space {
+  align-items: center;
+  display: flex;
+  height: 64px;
+  justify-content: center;
   margin-bottom: 1em;
 }
 
-.HowTo-scoreCard {
+.Game-players {
+  position: absolute;
+  top: 0;
+  z-index: 100;
+}
+
+.Game-controls {
+  bottom: 0;
+  padding: 1em 2em;
+  position: fixed;
+}
+
+.Game-scoreCard {
   position: fixed;
   right: 1em;
   top: 1em;
   z-index: 100;
 }
-.HowTo-scoreCard::before {
+.Game-scoreCard::before {
   background: rgba(255, 255, 255, 0.2);
   border-radius: 0.4em;
   content: "";
@@ -51,6 +74,6 @@
   z-index: -1;
 }
 
-.HowTo-playerList {
+.Game-playerList {
   padding: 0.4em;
 }
