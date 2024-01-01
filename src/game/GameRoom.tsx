@@ -26,8 +26,7 @@ function GameRoom() {
       return <Game roomId={roomId} userId={userId} users={users} />;
     }
     if (!userId || !users[userId]) {
-      // users is loading; render placeholder
-      return <TitleCard title={<>&nbsp;</>}>{null}</TitleCard>;
+      return null;
     }
     if (!users[userId]?.name) {
       // No name set yet; prompt for one

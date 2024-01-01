@@ -22,6 +22,7 @@ function Meeple({
             transition: {
               duration: 0.3,
               ease: "circOut",
+              delay: 1,
             },
           }
         : null)}

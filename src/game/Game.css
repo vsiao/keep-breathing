@@ -9,7 +9,7 @@
 
 .Game-board {
   align-items: center;
-  animation: 3s fade-in ease-in;
+  animation: 2s fade-in ease-in;
   display: flex;
   flex-direction: column;
   transform-origin: top center;
@@ -33,6 +33,7 @@
   display: flex;
   flex-direction: column;
   position: relative;
+  padding-bottom: 5em;
 }
 
 .Game-space {
@@ -43,6 +44,40 @@
   margin-bottom: 1em;
 }
 
+.Game-blankSpace {
+  border: 0.4em solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  box-sizing: border-box;
+  height: 64px;
+  width: 64px;
+}
+
+.Game-stepIndicator {
+  align-items: center;
+  animation: 3s linear 3s fade-out forwards;
+  background: var(--light-blue);
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.2);
+  box-sizing: border-box;
+  display: inline-flex;
+  font-weight: 600;
+  height: 1.6em;
+  justify-content: center;
+  left: 110%;
+  padding-top: 2px;
+  position: absolute;
+  width: 1.6em;
+}
+
+@keyframes fade-out {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 .Game-players {
   position: absolute;
   top: 0;
@@ -50,9 +85,25 @@
 }
 
 .Game-controls {
+  background: linear-gradient(to bottom, transparent, var(--ddark-blue));
   bottom: 0;
-  padding: 1em 2em;
+  display: flex;
+  justify-content: center;
+  padding: 2em;
   position: fixed;
+  width: 100%;
+  z-index: 200;
+}
+
+.Game-secondaryButton {
+  background: var(--dark-blue);
+  border: 2px solid var(--light-blue);
+  color: var(--light-blue);
+  margin-right: 1em;
+}
+.Game-secondaryButton:hover {
+  border-color: white;
+  color: var(--dark-blue);
 }
 
 .Game-scoreCard {

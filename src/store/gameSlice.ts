@@ -6,6 +6,9 @@ import type { RootState } from "./store";
 export const selectGame = (state: RootState): GameState | undefined =>
   state.game;
 
+export const selectIsPendingAction = (state: RootState): boolean =>
+  !!state.game.uiMetadata.isPendingAction;
+
 interface CurrentTurn {
   playerId: string;
   phase: "roll" | "search" | "drop" | "gameOver";
@@ -18,6 +21,15 @@ export interface GameState {
   playerOrder: string[];
   players: Record<string, PlayerState>;
   path: GameSpace[];
+
+  uiMetadata: {
+    isPendingAction: boolean;
+    mostRecentRoll: {
+      destination: number;
+      direction: "up" | "down";
+      steps: number[];
+    };
+  };
 }
 
 export interface PlayerState {
@@ -42,12 +54,13 @@ export const ALL_LOOT: Loot[] = new Array(32).fill(null).map((_, i) => ({
 }));
 
 interface GameSpace {
+  id: string;
   playerId?: string;
   loot: Loot[];
 }
 
 export type GameActionPayload = StartPayload | RollPayload | SearchPayload;
-type PublishedGameAction = PayloadAction<Published<GameActionPayload>>;
+type PublishedGameActions = PayloadAction<Published<GameActionPayload>[]>;
 type Published<PayloadT> = PayloadT & { ts: number };
 
 export interface PlayerConfig {
@@ -60,15 +73,37 @@ export const gameSlice = createSlice({
   name: "game",
   initialState: {} as GameState,
   reducers: {
-    apply(state: GameState, { payload }: PublishedGameAction): GameState {
-      switch (payload.type) {
-        case "START":
-          return initGame(payload);
-        case "ROLL":
-          return roll(state, payload);
-        case "SEARCH":
-          return search(state, payload);
+    setPendingAction(state) {
+      return {
+        ...state,
+        uiMetadata: {
+          ...state.uiMetadata,
+          isPendingAction: true,
+        },
+      };
+    },
+    applyMulti(state: GameState, { payload }: PublishedGameActions) {
+      state = {
+        ...state,
+        uiMetadata: {
+          ...state.uiMetadata,
+          isPendingAction: false,
+        },
+      };
+      for (const gameAction of payload) {
+        switch (gameAction.type) {
+          case "START":
+            state = initGame(gameAction);
+            break;
+          case "ROLL":
+            state = roll(state, gameAction);
+            break;
+          case "SEARCH":
+            state = search(state, gameAction);
+            break;
+        }
       }
+      return state;
     },
   },
 });
@@ -119,7 +154,15 @@ const initGame = (payload: Published<StartPayload>): GameState => {
         },
       ]),
     ),
-    path: allLoot.map((loot) => ({ loot: [loot] })),
+    path: allLoot.map((loot, i) => ({ id: `loot_${i}`, loot: [loot] })),
+    uiMetadata: {
+      isPendingAction: false,
+      mostRecentRoll: {
+        destination: -1,
+        direction: "down",
+        steps: [],
+      },
+    },
   };
 };
 
@@ -142,19 +185,25 @@ export const roll = (
   const random = alea(payload.ts);
   const rollDie = () => 1 + Math.floor(3 * random()); // 1, 2, or 3
   let roll = rollDie() + rollDie() - player.hand.length;
-  console.log("roll", roll);
+  const steps = [];
   for (; roll > 0; --roll) {
     shift();
-    while (
-      state.path[dest].playerId &&
-      dest >= -1 &&
-      dest < state.path.length
-    ) {
+    while (dest > -1 && dest < state.path.length && state.path[dest].playerId) {
       shift();
-      console.log("extra shift because occupied", dest);
+    }
+    if (dest >= state.path.length) {
+      if (steps.length === 0) {
+        throw new Error("Unable to dive deeper");
+      }
+      dest = steps[steps.length - 1];
+      break;
+    }
+    steps.push(dest);
+    if (dest < 0) {
+      break;
     }
   }
-  return {
+  state = {
     ...state,
     currentTurn: {
       playerId: player.id,
@@ -166,6 +215,9 @@ export const roll = (
         ...player,
         position: dest,
         direction,
+        score:
+          dest < 0 ? [...player.score, ...player.hand.flat()] : player.score,
+        hand: dest < 0 ? [] : player.hand,
       },
     },
     path: state.path.map((space, i) => ({
@@ -177,7 +229,20 @@ export const roll = (
             ? player.id // move to destination
             : space.playerId,
     })),
+    uiMetadata: {
+      ...state.uiMetadata,
+      mostRecentRoll: {
+        destination: dest,
+        direction,
+        steps,
+      },
+    },
   };
+  if (dest < 0) {
+    // returned to submarine
+    return endTurn(state);
+  }
+  return state;
 };
 
 type SearchPayload =
@@ -236,38 +301,24 @@ const search = (
 };
 
 const endTurn = (state: GameState): GameState => {
-  if (state.oxygen <= 0) {
-    if (state.round === 3) {
-      return {
-        ...state,
-        currentTurn: {
-          playerId: state.currentTurn.playerId,
-          phase: "gameOver",
-        },
-      };
-    }
-    const drowned = state.path
-      .filter((space) => space.playerId)
-      .map(({ playerId }) => playerId);
-    if (drowned.length <= 0) {
-      // TODO award treasure, increment round, begin turn
-      return state;
-    } else {
-      // TODO auto-drop maybe?
-      return {
-        ...state,
-        currentTurn: {
-          playerId: drowned[drowned.length - 1]!,
-          phase: "drop",
-        },
-      };
-    }
+  if (
+    state.oxygen <= 0 ||
+    Object.values(state.players).every((p) => p.position < 0)
+  ) {
+    // Oxygen depleted or all divers returned to submarine
+    return endRound(state);
   }
   const playerOrder = state.playerOrder;
-  const nextIndex =
-    (playerOrder.indexOf(state.currentTurn.playerId) + 1) % playerOrder.length;
-  const playerId = playerOrder[nextIndex];
-  // TODO skip players returned to submarine
+  let i = playerOrder.indexOf(state.currentTurn.playerId);
+  do {
+    i = (i + 1) % playerOrder.length;
+    // skip any players returned to the submarine
+  } while (
+    state.players[playerOrder[i]].position < 0 &&
+    state.players[playerOrder[i]].direction === "up"
+  );
+
+  const playerId = playerOrder[i];
   return {
     ...state,
     currentTurn: {
@@ -276,4 +327,51 @@ const endTurn = (state: GameState): GameState => {
     },
     oxygen: Math.max(0, state.oxygen - state.players[playerId].hand.length),
   };
+};
+
+const endRound = (state: GameState): GameState => {
+  if (state.round === 3) {
+    return {
+      ...state,
+      currentTurn: {
+        playerId: state.currentTurn.playerId,
+        phase: "gameOver",
+      },
+    };
+  }
+
+  // ids of drowned divers sorted from deepest
+  const drowned = state.path
+    .filter((space) => space.playerId)
+    .map(({ playerId }) => playerId);
+  drowned.reverse();
+
+  if (drowned.length <= 0) {
+    return {
+      ...state,
+      currentTurn: {
+        // Last diver to return to submarine goes first
+        playerId: state.currentTurn.playerId,
+        phase: "roll",
+      },
+      round: state.round + 1,
+      oxygen: 25,
+      players: Object.fromEntries(
+        Object.entries(state.players).map(([id, p]) => [
+          id,
+          { ...p, direction: "down" },
+        ]),
+      ),
+      path: state.path.filter((space) => space.loot.length > 0),
+    };
+  } else {
+    // TODO auto-drop maybe?
+    return {
+      ...state,
+      currentTurn: {
+        playerId: drowned[drowned.length - 1]!,
+        phase: "drop",
+      },
+    };
+  }
 };

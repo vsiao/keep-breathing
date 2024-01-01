@@ -12,7 +12,14 @@ import { useEffect } from "react";
 import { GameActionPayload, gameSlice } from "../store/gameSlice";
 import { store } from "../store/store";
 
-export interface DbGame {}
+const gameActionBuffer: (GameActionPayload & { ts: number })[] = [];
+let flushBufferTimer: any;
+const flushBuffer = () => {
+  if (gameActionBuffer.length) {
+    store.dispatch(gameSlice.actions.applyMulti(gameActionBuffer));
+  }
+  gameActionBuffer.length = 0;
+};
 
 export const useDbGameLogs = async (roomId?: string) => {
   useEffect(() => {
@@ -25,8 +32,10 @@ export const useDbGameLogs = async (roomId?: string) => {
     );
 
     return onChildAdded(logsRef, (log) => {
-      console.log("child_added", log.key, log.val());
-      store.dispatch(gameSlice.actions.apply(log.val()));
+      console.debug(log.key, log.val());
+      gameActionBuffer.push(log.val());
+      clearTimeout(flushBufferTimer);
+      flushBufferTimer = setTimeout(flushBuffer, 0);
     });
   }, [roomId]);
 };
