@@ -1,9 +1,7 @@
 import classnames from "classnames";
 import Submarine from "../ui/Submarine";
 import Loot from "../ui/Loot";
-import Meeple from "../ui/Meeple";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { RoomUsers } from "../db/DbRoomUsers";
 import "./Game.css";
 import { dispatchGameAction, useDbGameLogs } from "../db/DbGame";
 import { store, useAppSelector } from "../store/store";
@@ -15,9 +13,9 @@ import {
   selectIsPendingAction,
 } from "../store/gameSlice";
 import Button from "../ui/Button";
-import { LayoutGroup, motion } from "framer-motion";
-import TitleCard from "../ui/TitleCard";
+import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
 import Diver from "../ui/Diver";
+import { endGame } from "../db/DbRoom";
 
 type AnimationStage =
   | { kind: "initialRender" }
@@ -27,15 +25,7 @@ type AnimationStage =
 
 const SCROLL_BUFFER = 150;
 
-function Game({
-  roomId,
-  userId,
-  users,
-}: {
-  roomId?: string;
-  userId?: string;
-  users: RoomUsers;
-}) {
+function Game({ roomId, userId }: { roomId?: string; userId?: string }) {
   const game = useAppSelector(selectGame);
   useDbGameLogs(roomId);
 
@@ -64,7 +54,9 @@ function Game({
   }, [isGamePathLoaded]);
 
   const currentPlayerPosition =
-    game?.players && game.players[game.currentTurn.playerId].position;
+    game?.currentTurn?.phase === "gameOver"
+      ? undefined
+      : game?.players && game.players[game.currentTurn.playerId].position;
   useEffect(() => {
     if (
       !game?.uiMetadata?.mostRecentRoll ||
@@ -74,13 +66,13 @@ function Game({
       return;
     }
     const autoScroll = () => {
+      if (currentPlayerPosition < 0) {
+        window.scroll({ behavior: "smooth", top: 0 });
+      }
       if (
         game.currentTurn.phase === "roll" ||
         game.currentTurn.phase === "drop"
       ) {
-        if (currentPlayerPosition < 0) {
-          window.scroll({ behavior: "smooth", top: 0 });
-        }
         const spaceNode = spaceRefs.current.get(currentPlayerPosition);
         if (!spaceNode) {
           return;
@@ -146,7 +138,7 @@ function Game({
   return (
     <div
       className={classnames("Game", {
-        "Game--over": game?.currentTurn?.phase === "gameOver",
+        "Game--over": game.currentTurn.phase === "gameOver",
       })}
       style={{
         maxHeight:
@@ -178,13 +170,18 @@ function Game({
         >
           <Submarine
             className="Game-submarine"
-            players={Object.values(game?.players ?? {}).filter(
-              (p) => p.position < 0,
-            )}
-          />
+            players={Object.values(game.players).filter((p) => p.position < 0)}
+          >
+            {game.uiMetadata.mostRecentRoll.destination === -1 &&
+              game.uiMetadata.mostRecentRoll.steps.length > 0 &&
+              renderStepIndicator(
+                -1,
+                game.uiMetadata.mostRecentRoll.steps.length - 1,
+              )}
+          </Submarine>
           <div className="Game-path">
             <ol className="Game-loots">
-              {(game?.path ?? []).map((space, i) => (
+              {game.path.map((space, i) => (
                 <li
                   className="Game-space"
                   key={space.id}
@@ -194,7 +191,7 @@ function Game({
                     space.loot.map(({ id, level }, j) => (
                       <Loot
                         className="Game-spaceLoot"
-                        key={j}
+                        key={id}
                         level={level}
                         layoutId={id}
                       />
@@ -202,41 +199,31 @@ function Game({
                   ) : (
                     <span className="Game-blankSpace" />
                   )}
-                  {game?.uiMetadata?.mostRecentRoll?.steps?.includes(i) && (
-                    <motion.span
-                      key={game.uiMetadata.mostRecentRoll.destination}
-                      className="Game-stepIndicator"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{
-                        delay:
-                          game.uiMetadata.mostRecentRoll.steps.indexOf(i) * 0.2,
-                      }}
-                    >
-                      {game.uiMetadata.mostRecentRoll.steps.indexOf(i) + 1}
-                    </motion.span>
-                  )}
+                  {game.uiMetadata.mostRecentRoll.steps.includes(i) &&
+                    renderStepIndicator(
+                      game.uiMetadata.mostRecentRoll.destination,
+                      game.uiMetadata.mostRecentRoll.steps.indexOf(i),
+                    )}
                 </li>
               ))}
             </ol>
             <ol className="Game-players">
-              {(game?.path ?? []).map(({ id, playerId }, i) => (
+              {game.path.map(({ id, playerId }, i) => (
                 <li className="Game-space" key={id}>
-                  {playerId && <Diver player={game!.players[playerId]} />}
+                  {playerId && <Diver player={game.players[playerId]} />}
                 </li>
               ))}
             </ol>
           </div>
         </div>
       </LayoutGroup>
-      <div className="Game-minimap">
-        <span className="Game-oxygen">{game?.oxygen ?? 25}</span>
-        <span className="Game-round">round {game?.round ?? 1} of 3</span>
-        <ol className="Game-depthIndicator">
-          {game?.path &&
-            game.path.map((s) => (
+      {game.currentTurn.phase !== "gameOver" && (
+        <div className="Game-minimap">
+          <span className="Game-oxygen">{game.oxygen}</span>
+          <span className="Game-round">round {game.round} of 3</span>
+          <ol className="Game-depthIndicator">
+            {game.path.map((s) => (
               <li key={s.id} className="Game-depthLevel">
-                -
                 {s.playerId && (
                   <motion.span
                     className={classnames(
@@ -250,16 +237,49 @@ function Game({
                 )}
               </li>
             ))}
+          </ol>
+        </div>
+      )}
+      <motion.div className="Game-scoreCard" layout>
+        <ol className="Game-playerList">
+          {game.playerOrder.map((playerId) => {
+            const player = game.players[playerId];
+            return (
+              <li
+                key={playerId}
+                className={classnames(
+                  "Game-player",
+                  `Game-player--${player.color}`,
+                  {
+                    "Game-player--current":
+                      game.currentTurn.phase !== "gameOver" &&
+                      game.currentTurn.playerId === playerId,
+                  },
+                )}
+              >
+                {player.score.length > 0 && (
+                  <ol className="Game-playerScore">
+                    {player.score.map(([{ id, level, value }]) => (
+                      <li key={id}>
+                        <Loot level={level} value={value} layoutId={id} delay />
+                      </li>
+                    ))}
+                  </ol>
+                )}
+              </li>
+            );
+          })}
         </ol>
-      </div>
-      <div className="Game-scoreCard">
-        <ol className="Game-playerList"></ol>
-      </div>
-      {roomId &&
-        game &&
-        game.currentTurn?.phase !== "gameOver" &&
-        game.currentTurn?.playerId === userId && (
+      </motion.div>
+      <AnimatePresence>
+        {roomId && game.currentTurn.phase !== "gameOver" && (
           <motion.div
+            key={
+              game.currentTurn.playerId === userId
+                ? `${game.currentTurn.playerId}_${game.currentTurn.phase}`
+                : // Don't animate between other player's move phases
+                  game.currentTurn.playerId
+            }
             className="Game-controls"
             initial={{ translateY: "100%" }}
             animate={{ translateY: 0 }}
@@ -267,46 +287,62 @@ function Game({
               delay: game.uiMetadata.lastActionDelay ? 1 : undefined,
               ease: "circOut",
             }}
+            exit={{ translateY: "100%", transition: { delay: 0 } }}
+            layout
           >
-            {renderControls(game, roomId)}
+            {renderControls(game, roomId, userId)}
           </motion.div>
         )}
-      {game?.currentTurn?.phase === "gameOver" && (
+      </AnimatePresence>
+      {game.currentTurn.phase === "gameOver" && (
         <div className="Game-gameOver">
-          <TitleCard title="Game Over">
-            <ol>
-              {Object.values(game.players)
-                .sort(
-                  (p1, p2) =>
-                    p2.score.reduce((s, [l]) => s + l.value, 0) -
-                    p1.score.reduce((s, [l]) => s + l.value, 0),
-                )
-                .map((p) => (
-                  <li key={p.id}>
-                    <Meeple color={p.color} />
-                    {p.name} {p.score.reduce((s, [l]) => s + l.value, 0)}
-                    {[1, 2, 3].map((round, i) => {
-                      const roundLoot = p.score.filter(([, r]) => r === round);
-                      if (roundLoot.length === 0) {
-                        return null;
-                      }
-                      return (
-                        <>
-                          <span>{round}</span>
-                          <ul className="Game-summaryLoot">
-                            {roundLoot.map(([{ level, value }], i) => (
-                              <li key={i}>
-                                <Loot level={level} value={value} />
-                              </li>
-                            ))}
-                          </ul>
-                        </>
-                      );
-                    })}
-                  </li>
-                ))}
-            </ol>
-          </TitleCard>
+          <div className="Game-gameOverCard">
+            <h1 className="Game-gameOverTitle">Game Over</h1>
+            <table className="Game-gameOverTable">
+              <tbody>
+                {Object.values(game.players)
+                  .sort(
+                    (p1, p2) =>
+                      p2.score.reduce((s, [l]) => s + l.value, 0) -
+                      p1.score.reduce((s, [l]) => s + l.value, 0),
+                  )
+                  .map((p) => (
+                    <tr key={p.id} className="Game-gameOverPlayer">
+                      <th className="Game-gameOverPlayer">
+                        <span
+                          className={classnames(
+                            "Game-gameOverPlayerScore",
+                            p.color,
+                          )}
+                        >
+                          {p.score.reduce((s, [l]) => s + l.value, 0)}
+                        </span>
+                        {p.name}
+                      </th>
+                      {[1, 2, 3].map((round, i) => {
+                        const roundLoot = p.score.filter(
+                          ([, r]) => r === round,
+                        );
+                        return (
+                          <td key={i}>
+                            <ul className="Game-summaryLoot">
+                              {roundLoot.map(([{ level, value }], i) => (
+                                <li key={i}>
+                                  <Loot level={level} value={value} />
+                                </li>
+                              ))}
+                            </ul>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+            <Button className="Game-playAgain" onClick={() => endGame(roomId!)}>
+              play again
+            </Button>
+          </div>
         </div>
       )}
     </div>
@@ -315,8 +351,43 @@ function Game({
 
 export default Game;
 
-const renderControls = (game: GameState, roomId: string) => {
+const renderStepIndicator = (destination: number, order: number) => {
+  return (
+    <motion.span
+      key={destination}
+      className="Game-stepIndicator"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{
+        delay: order * 0.2,
+      }}
+    >
+      {order + 1}
+    </motion.span>
+  );
+};
+
+const renderControls = (
+  game: GameState,
+  roomId: string,
+  userId: string | undefined,
+) => {
+  if (game.currentTurn.phase === "gameOver") {
+    return null;
+  }
   const player = game.players[game.currentTurn.playerId];
+  if (player.id !== userId) {
+    switch (game.currentTurn.phase) {
+      case "roll":
+      case "search":
+        if (player.position === -1 && player.direction === "up") {
+          return <p>{player.name} returned to the submarine.</p>;
+        }
+        return <p>It's {player.name}'s turn.</p>;
+      case "drop":
+        return <p>{player.name} drowned. 😢</p>;
+    }
+  }
   switch (game.currentTurn.phase) {
     case "roll":
       if (player.position < 0) {
@@ -366,13 +437,17 @@ const renderControls = (game: GameState, roomId: string) => {
     case "search":
       if (player.position === -1) {
         return (
-          <GameButton
-            key="pass"
-            roomId={roomId}
-            action={{ type: "SEARCH", kind: "pass" }}
-          >
-            yay!
-          </GameButton>
+          <>
+            <p>You returned to the submarine.</p>
+            <br />
+            <GameButton
+              key="pass"
+              roomId={roomId}
+              action={{ type: "SEARCH", kind: "pass" }}
+            >
+              yay!
+            </GameButton>
+          </>
         );
       }
       return (
@@ -407,13 +482,14 @@ const renderControls = (game: GameState, roomId: string) => {
       );
     case "drop":
       return (
-        <GameButton key="drop" roomId={roomId} action={{ type: "DROP" }}>
-          oops...
-        </GameButton>
+        <>
+          <p>You drowned.</p>
+          <br />
+          <GameButton key="drop" roomId={roomId} action={{ type: "DROP" }}>
+            oops...
+          </GameButton>
+        </>
       );
-
-    case "gameOver":
-      return null;
   }
 };
 

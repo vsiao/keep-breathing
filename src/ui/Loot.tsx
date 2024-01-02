@@ -8,21 +8,24 @@ function Loot({
   level,
   value,
   layoutId,
+  delay,
 }: {
   className?: string;
   level: number;
   value?: number;
   layoutId?: number;
+  delay?: boolean;
 }) {
   const spinDuration = useMemo(() => 16 + Math.round(Math.random() * 4), []);
   const animationDelay = useMemo(() => Math.round(Math.random() * 10), []);
   return (
     <motion.div
       className={classnames("Loot", `Loot--level${level}`, className)}
-      {...(layoutId
+      {...(layoutId !== undefined
         ? {
             layout: true,
             layoutId: `loot_${layoutId}`,
+            transition: delay ? { delay: 1 } : undefined,
           }
         : null)}
     >

@@ -46,7 +46,7 @@ export const dispatchGameAction = (
 ) => {
   const logsRef = ref(db, `rooms/${roomId}/gameLogs`);
   const logRef = push(logsRef);
-  runTransaction(
+  return runTransaction(
     logRef,
     () => ({
       ...action,

@@ -1,8 +1,8 @@
 import { useParams } from "react-router-dom";
 import "./GameRoom.css";
 import { ref, set } from "firebase/database";
-import { FormEventHandler, useState } from "react";
-import { useAppSelector } from "../store/store";
+import { FormEventHandler, useEffect, useState } from "react";
+import { store, useAppSelector } from "../store/store";
 import { selectUserId } from "../store/authSlice";
 import GameLobby from "./GameLobby";
 import { db } from "../db/firebase";
@@ -12,6 +12,7 @@ import TitleCard from "../ui/TitleCard";
 import Button from "../ui/Button";
 import Game from "./Game";
 import { startGame, useDbRoomStatus } from "../db/DbRoom";
+import { gameSlice } from "../store/gameSlice";
 
 function GameRoom() {
   const { roomId } = useParams() as { roomId: string };
@@ -20,10 +21,16 @@ function GameRoom() {
   const playerColors = useDbPlayerColors(roomId);
   const roomStatus = useDbRoomStatus(roomId);
 
+  useEffect(() => {
+    if (roomStatus !== "playing") {
+      store.dispatch(gameSlice.actions.resetGame());
+    }
+  }, [roomStatus]);
+
   const renderRoomContents = () => {
     if (roomStatus === "playing" && userId) {
       // In a game; render the game
-      return <Game roomId={roomId} userId={userId} users={users} />;
+      return <Game roomId={roomId} userId={userId} />;
     }
     if (!userId || !users[userId]) {
       return null;

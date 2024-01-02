@@ -1,9 +1,11 @@
-import { onValue, ref, set } from "firebase/database";
+import { onValue, ref, remove, set } from "firebase/database";
 import { useEffect, useState } from "react";
 import { db } from "./firebase";
 import { RoomUsers } from "./DbRoomUsers";
 import { PlayerColor } from "../game/config";
 import { dispatchGameAction } from "./DbGame";
+import { store } from "../store/store";
+import { gameSlice } from "../store/gameSlice";
 
 export const useDbRoomStatus = (roomId: string) => {
   const [status, setStatus] = useState<string | null>(null);
@@ -20,8 +22,7 @@ export const startGame = async (
   users: RoomUsers,
   playerColors: Record<string, PlayerColor>,
 ) => {
-  set(ref(db, `rooms/${roomId}/status`), "playing");
-  dispatchGameAction(roomId, {
+  await dispatchGameAction(roomId, {
     type: "START",
     players: Object.entries(playerColors).map(([id, color]) => ({
       id,
@@ -29,4 +30,11 @@ export const startGame = async (
       color,
     })),
   });
+  set(ref(db, `rooms/${roomId}/status`), "playing");
+};
+
+export const endGame = async (roomId: string) => {
+  await remove(ref(db, `rooms/${roomId}/gameLogs`));
+  store.dispatch(gameSlice.actions.resetGame());
+  remove(ref(db, `rooms/${roomId}/status`));
 };

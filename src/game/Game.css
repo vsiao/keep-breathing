@@ -14,9 +14,6 @@
   flex-direction: column;
   transform-origin: top center;
 }
-.Game--over .Game-board {
-  opacity: 0.3;
-}
 
 @keyframes fade-in {
   0% {
@@ -36,7 +33,7 @@
   display: flex;
   flex-direction: column;
   position: relative;
-  padding-bottom: 5em;
+  padding-bottom: 8em;
 }
 
 .Game-space {
@@ -71,10 +68,14 @@
   font-weight: 600;
   height: 1.6em;
   justify-content: center;
-  left: 110%;
+  left: calc(100% + 1em);
   padding-top: 2px;
   position: absolute;
   width: 1.6em;
+}
+.Submarine .Game-stepIndicator {
+  bottom: 1em;
+  left: calc(50% + 5em);
 }
 
 @keyframes fade-out {
@@ -93,12 +94,13 @@
 }
 
 .Game-controls {
-  background: linear-gradient(to bottom, transparent, var(--ddark-blue));
+  background: var(--dark-blue);
+  box-shadow: 0 -0.2em 0 rgba(104, 195, 212, 0.2);
   bottom: 0;
-  display: flex;
-  justify-content: center;
+  color: white;
   padding: 2em;
   position: fixed;
+  text-align: center;
   width: 100%;
   z-index: 200;
 }
@@ -118,7 +120,7 @@
   align-items: stretch;
   box-sizing: border-box;
   display: flex;
-  padding: 3em 2em 5em;
+  padding: 3em 2em 8em;
   height: 100vh;
   left: 0;
   position: fixed;
@@ -166,35 +168,40 @@
 }
 
 .Game-depthLevel {
+  align-items: center;
+  background: white;
+  display: flex;
+  height: 1px;
+  justify-content: center;
+  margin: 0.4em 0;
   position: relative;
+  width: 0.4em;
 }
 
 .Game-minimapPlayer {
-  border-bottom: 0.2em solid transparent;
-  border-top: 0.2em solid transparent;
-  border-right: 1em solid;
-  left: 100%;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+  height: 0.8em;
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
+  width: 0.8em;
 }
 .Game-minimapPlayer--red {
-  border-right-color: var(--red);
+  background: var(--red);
 }
 .Game-minimapPlayer--orange {
-  border-right-color: var(--orange);
+  background: var(--orange);
 }
 .Game-minimapPlayer--yellow {
-  border-right-color: var(--yellow);
+  background: var(--yellow);
 }
 .Game-minimapPlayer--green {
-  border-right-color: var(--green);
+  background: var(--green);
 }
 .Game-minimapPlayer--blue {
-  border-right-color: var(--blue);
+  background: var(--blue);
 }
 .Game-minimapPlayer--purple {
-  border-right-color: var(--purple);
+  background: var(--purple);
 }
 
 .Game-scoreCard {
@@ -220,13 +227,136 @@
   padding: 0.4em;
 }
 
+.Game-player {
+  align-items: center;
+  display: flex;
+}
+.Game-player::before {
+  border-radius: 50%;
+  content: "";
+  display: inline-block;
+  height: 1.2em;
+  width: 1.2em;
+}
+.Game-player--red::before {
+  background: var(--red);
+}
+.Game-player--orange::before {
+  background: var(--orange);
+}
+.Game-player--yellow::before {
+  background: var(--yellow);
+}
+.Game-player--green::before {
+  background: var(--green);
+}
+.Game-player--blue::before {
+  background: var(--blue);
+}
+.Game-player--purple::before {
+  background: var(--purple);
+}
+.Game-player--current::before {
+  animation: 1s blink infinite;
+}
+
+@keyframes blink {
+  0% {
+    opacity: 1;
+  }
+  25% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.Game-player + .Game-player {
+  margin-top: 0.4em;
+}
+
+.Game-playerScore {
+  display: flex;
+  font-size: 0.3em;
+  margin-left: 1em;
+}
+
 .Game-gameOver {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  justify-content: center;
   position: fixed;
   z-index: 500;
 }
 
-.Game-summaryLoot {
+.Game-gameOverCard {
+  align-items: center;
+  background: white;
+  border: 0.2em solid var(--dark-blue);
+  border-radius: 1em;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  margin: 0;
+  padding: 2em 1em;
+  position: relative;
+  width: 18em;
+  z-index: 0;
+}
+
+.Game-gameOverTitle {
+  margin: 0;
+  margin-bottom: 0.8em;
+}
+
+.Game-gameOverTable {
+  width: 100%;
+}
+
+.Game-gameOverPlayer {
+  text-align: left;
+}
+
+.Game-gameOverPlayerScore {
+  align-items: center;
+  border-radius: 50%;
+  color: white;
   display: inline-flex;
-  font-size: 0.5em;
+  height: 1.8em;
+  justify-content: center;
+  margin: 0.2em;
+  margin-right: 0.6em;
+  width: 1.8em;
+}
+.Game-gameOverPlayerScore.red {
+  background: var(--red);
+}
+.Game-gameOverPlayerScore.orange {
+  background: var(--orange);
+}
+.Game-gameOverPlayerScore.yellow {
+  background: var(--yellow);
+}
+.Game-gameOverPlayerScore.green {
+  background: var(--green);
+}
+.Game-gameOverPlayerScore.blue {
+  background: var(--blue);
+}
+.Game-gameOverPlayerScore.purple {
+  background: var(--purple);
+}
+
+.Game-gameOver .Game-summaryLoot {
+  display: flex;
+  font-size: 0.4em;
+  justify-content: center;
   margin-left: 1em;
+}
+
+.Game-playAgain {
+  margin-top: 1em;
 }

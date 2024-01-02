@@ -13,6 +13,7 @@ function Diver({ player }: { player: PlayerState }) {
       className={classnames("Diver", `Diver--${player.color}`, {
         "Diver--currentTurn": currentPlayerId === player.id,
       })}
+      initial={false}
       layout
       layoutId={`diver_${player.color}`}
       transition={{
