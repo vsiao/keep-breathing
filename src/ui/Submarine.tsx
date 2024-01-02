@@ -1,7 +1,7 @@
 import classnames from "classnames";
 import "./Submarine.css";
 import { PlayerState } from "../store/gameSlice";
-import Meeple from "./Meeple";
+import Diver from "./Diver";
 
 function Submarine({
   className,
@@ -43,7 +43,7 @@ function Submarine({
       <ul className="Submarine-players">
         {players?.map((p) => (
           <li key={p.id} className="Submarine-player">
-            <Meeple color={p.color} layoutId="gameBoard" />
+            <Diver player={p} />
           </li>
         ))}
       </ul>

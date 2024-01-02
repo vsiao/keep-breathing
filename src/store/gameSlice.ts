@@ -9,9 +9,13 @@ export const selectGame = (state: RootState): GameState | undefined =>
 export const selectIsPendingAction = (state: RootState): boolean =>
   !!state.game.uiMetadata.isPendingAction;
 
+export const selectCurrentPlayerId = (state: RootState): string =>
+  state.game.currentTurn.playerId;
+
 interface CurrentTurn {
   playerId: string;
   phase: "roll" | "search" | "drop" | "gameOver";
+  drowned?: string[];
 }
 
 export interface GameState {
@@ -24,6 +28,7 @@ export interface GameState {
 
   uiMetadata: {
     isPendingAction: boolean;
+    lastActionDelay: boolean;
     mostRecentRoll: {
       destination: number;
       direction: "up" | "down";
@@ -39,16 +44,18 @@ export interface PlayerState {
   position: number;
   direction: "up" | "down";
   hand: Loot[][];
-  score: Loot[];
+  score: [Loot, number][]; // loot and the round it was retrieved
 }
 
 interface Loot {
+  id: number;
   level: number;
   value: number;
 }
 
 // 2 of each value from 0 to 15
 export const ALL_LOOT: Loot[] = new Array(32).fill(null).map((_, i) => ({
+  id: i,
   level: Math.floor(i / 8) + 1,
   value: Math.floor(i / 2),
 }));
@@ -59,7 +66,11 @@ interface GameSpace {
   loot: Loot[];
 }
 
-export type GameActionPayload = StartPayload | RollPayload | SearchPayload;
+export type GameActionPayload =
+  | StartPayload
+  | RollPayload
+  | SearchPayload
+  | DropPayload;
 type PublishedGameActions = PayloadAction<Published<GameActionPayload>[]>;
 type Published<PayloadT> = PayloadT & { ts: number };
 
@@ -87,6 +98,7 @@ export const gameSlice = createSlice({
         ...state,
         uiMetadata: {
           ...state.uiMetadata,
+          lastActionDelay: false,
           isPendingAction: false,
         },
       };
@@ -100,6 +112,9 @@ export const gameSlice = createSlice({
             break;
           case "SEARCH":
             state = search(state, gameAction);
+            break;
+          case "DROP":
+            state = drop(state, gameAction);
             break;
         }
       }
@@ -157,6 +172,7 @@ const initGame = (payload: Published<StartPayload>): GameState => {
     path: allLoot.map((loot, i) => ({ id: `loot_${i}`, loot: [loot] })),
     uiMetadata: {
       isPendingAction: false,
+      lastActionDelay: false,
       mostRecentRoll: {
         destination: -1,
         direction: "down",
@@ -203,7 +219,7 @@ export const roll = (
       break;
     }
   }
-  state = {
+  return {
     ...state,
     currentTurn: {
       playerId: player.id,
@@ -216,14 +232,21 @@ export const roll = (
         position: dest,
         direction,
         score:
-          dest < 0 ? [...player.score, ...player.hand.flat()] : player.score,
+          dest < 0
+            ? [
+                ...player.score,
+                ...player.hand
+                  .flat()
+                  .map((l): [Loot, number] => [l, state.round]),
+              ]
+            : player.score,
         hand: dest < 0 ? [] : player.hand,
       },
     },
     path: state.path.map((space, i) => ({
       ...space,
       playerId:
-        space.playerId === player.id
+        space.playerId === player.id && i !== dest
           ? undefined // remove from origin
           : i === dest
             ? player.id // move to destination
@@ -231,6 +254,7 @@ export const roll = (
     })),
     uiMetadata: {
       ...state.uiMetadata,
+      lastActionDelay: dest < 0,
       mostRecentRoll: {
         destination: dest,
         direction,
@@ -238,11 +262,6 @@ export const roll = (
       },
     },
   };
-  if (dest < 0) {
-    // returned to submarine
-    return endTurn(state);
-  }
-  return state;
 };
 
 type SearchPayload =
@@ -276,6 +295,10 @@ const search = (
         path: state.path.map((space, i) =>
           i === player.position ? { ...space, loot: [] } : space,
         ),
+        uiMetadata: {
+          ...state.uiMetadata,
+          lastActionDelay: true, // let animation resolve before moving on
+        },
       });
     case "place":
       if (space.loot.length > 0) {
@@ -296,8 +319,72 @@ const search = (
             ? { ...space, loot: player.hand[index] }
             : space,
         ),
+        uiMetadata: {
+          ...state.uiMetadata,
+          lastActionDelay: true, // let animation resolve before moving on
+        },
       });
   }
+};
+
+interface DropPayload {
+  type: "DROP";
+}
+const drop = (state: GameState, payload: Published<DropPayload>): GameState => {
+  const player = state.players[state.currentTurn.playerId];
+  const random = alea(payload.ts);
+  const droppedLoot = shuffle(player.hand.flat(), random);
+  const path = state.path.slice();
+
+  let n = 0;
+  while (droppedLoot.length) {
+    const lastSpace = path[path.length - 1];
+    if (lastSpace.id.startsWith("drop") && lastSpace.loot.length < 3) {
+      path[path.length - 1] = {
+        ...lastSpace,
+        loot: [
+          ...lastSpace.loot,
+          ...droppedLoot.splice(0, Math.min(3 - lastSpace.loot.length, 3)),
+        ],
+      };
+    } else {
+      path.push({
+        id: `drop_${state.round}_${n++}`,
+        loot: droppedLoot.splice(0, 3),
+      });
+    }
+  }
+
+  state = {
+    ...state,
+    players: {
+      ...state.players,
+      [player.id]: {
+        ...player,
+        position: -1,
+        hand: [],
+      },
+    },
+    path: path.map((s) =>
+      s.playerId === player.id ? { ...s, playerId: undefined } : s,
+    ),
+    uiMetadata: {
+      ...state.uiMetadata,
+      lastActionDelay: true, // animate drowning
+    },
+  };
+  const drowned = state.currentTurn.drowned!;
+  const i = drowned.indexOf(player.id);
+  if (i === drowned.length - 1) {
+    return endTurn(state);
+  }
+  return {
+    ...state,
+    currentTurn: {
+      ...state.currentTurn,
+      playerId: drowned[i + 1],
+    },
+  };
 };
 
 const endTurn = (state: GameState): GameState => {
@@ -342,8 +429,8 @@ const endRound = (state: GameState): GameState => {
 
   // ids of drowned divers sorted from deepest
   const drowned = state.path
-    .filter((space) => space.playerId)
-    .map(({ playerId }) => playerId);
+    .map(({ playerId }) => playerId)
+    .filter((id: string | undefined): id is string => id !== undefined);
   drowned.reverse();
 
   if (drowned.length <= 0) {
@@ -369,8 +456,9 @@ const endRound = (state: GameState): GameState => {
     return {
       ...state,
       currentTurn: {
-        playerId: drowned[drowned.length - 1]!,
+        playerId: drowned[0],
         phase: "drop",
+        drowned,
       },
     };
   }

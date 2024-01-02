@@ -1,18 +1,41 @@
+import { motion } from "framer-motion";
 import classnames from "classnames";
 import "./Loot.css";
 import { useMemo } from "react";
 
-function Loot({ className, level }: { className?: string; level: number }) {
+function Loot({
+  className,
+  level,
+  value,
+  layoutId,
+}: {
+  className?: string;
+  level: number;
+  value?: number;
+  layoutId?: number;
+}) {
   const spinDuration = useMemo(() => 16 + Math.round(Math.random() * 4), []);
   const animationDelay = useMemo(() => Math.round(Math.random() * 10), []);
   return (
-    <div className={classnames("Loot", className)}>
+    <motion.div
+      className={classnames("Loot", `Loot--level${level}`, className)}
+      {...(layoutId
+        ? {
+            layout: true,
+            layoutId: `loot_${layoutId}`,
+          }
+        : null)}
+    >
       <svg
-        className={classnames("Loot-icon", `Loot-icon--level${level}`)}
-        style={{
-          animation: `spin ${spinDuration}s linear infinite`,
-          animationDelay: `${-animationDelay}s`,
-        }}
+        className="Loot-icon"
+        style={
+          value === undefined
+            ? {
+                animation: `spin ${spinDuration}s linear infinite`,
+                animationDelay: `${-animationDelay}s`,
+              }
+            : undefined
+        }
         xmlns="http://www.w3.org/2000/svg"
         version="1.1"
         width="64"
@@ -21,7 +44,8 @@ function Loot({ className, level }: { className?: string; level: number }) {
       >
         {renderLootBack(level)}
       </svg>
-    </div>
+      {value !== undefined && <span className="Loot-value">{value}</span>}
+    </motion.div>
   );
 }
 

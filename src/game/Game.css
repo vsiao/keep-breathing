@@ -14,6 +14,9 @@
   flex-direction: column;
   transform-origin: top center;
 }
+.Game--over .Game-board {
+  opacity: 0.3;
+}
 
 @keyframes fade-in {
   0% {
@@ -42,6 +45,11 @@
   height: 64px;
   justify-content: center;
   margin-bottom: 1em;
+  width: 8em;
+}
+
+.Game-spaceLoot + .Game-spaceLoot {
+  margin-left: -2.4em;
 }
 
 .Game-blankSpace {
@@ -106,6 +114,89 @@
   color: var(--dark-blue);
 }
 
+.Game-minimap {
+  align-items: stretch;
+  box-sizing: border-box;
+  display: flex;
+  padding: 3em 2em 5em;
+  height: 100vh;
+  left: 0;
+  position: fixed;
+  z-index: 200;
+}
+
+.Game-oxygen {
+  align-items: center;
+  background-color: var(--red);
+  border-radius: 50%;
+  box-sizing: border-box;
+  color: white;
+  display: flex;
+  height: 2em;
+  justify-content: center;
+  left: 50%;
+  padding-top: 0.1em;
+  position: absolute;
+  top: 1em;
+  transform: translateX(-50%);
+  width: 2em;
+}
+
+.Game-round {
+  left: 100%;
+  position: absolute;
+  top: 1em;
+  width: 3em;
+}
+
+.Game-depthIndicator {
+  background: linear-gradient(
+    to bottom,
+    var(--light-blue) 0%,
+    var(--med-blue) 40%,
+    var(--dark-blue) 80%,
+    var(--ddark-blue) 100%
+  );
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5);
+  border-radius: 0.4em;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.Game-depthLevel {
+  position: relative;
+}
+
+.Game-minimapPlayer {
+  border-bottom: 0.2em solid transparent;
+  border-top: 0.2em solid transparent;
+  border-right: 1em solid;
+  left: 100%;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.Game-minimapPlayer--red {
+  border-right-color: var(--red);
+}
+.Game-minimapPlayer--orange {
+  border-right-color: var(--orange);
+}
+.Game-minimapPlayer--yellow {
+  border-right-color: var(--yellow);
+}
+.Game-minimapPlayer--green {
+  border-right-color: var(--green);
+}
+.Game-minimapPlayer--blue {
+  border-right-color: var(--blue);
+}
+.Game-minimapPlayer--purple {
+  border-right-color: var(--purple);
+}
+
 .Game-scoreCard {
   position: fixed;
   right: 1em;
@@ -127,4 +218,15 @@
 
 .Game-playerList {
   padding: 0.4em;
+}
+
+.Game-gameOver {
+  position: fixed;
+  z-index: 500;
+}
+
+.Game-summaryLoot {
+  display: inline-flex;
+  font-size: 0.5em;
+  margin-left: 1em;
 }

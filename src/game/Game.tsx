@@ -1,3 +1,4 @@
+import classnames from "classnames";
 import Submarine from "../ui/Submarine";
 import Loot from "../ui/Loot";
 import Meeple from "../ui/Meeple";
@@ -15,6 +16,8 @@ import {
 } from "../store/gameSlice";
 import Button from "../ui/Button";
 import { LayoutGroup, motion } from "framer-motion";
+import TitleCard from "../ui/TitleCard";
+import Diver from "../ui/Diver";
 
 type AnimationStage =
   | { kind: "initialRender" }
@@ -60,37 +63,76 @@ function Game({
     return () => clearTimeout(timer);
   }, [isGamePathLoaded]);
 
+  const currentPlayerPosition =
+    game?.players && game.players[game.currentTurn.playerId].position;
   useEffect(() => {
     if (
       !game?.uiMetadata?.mostRecentRoll ||
+      currentPlayerPosition === undefined ||
       animationStage.kind !== "complete"
     ) {
       return;
     }
-    const { destination, direction } = game.uiMetadata.mostRecentRoll;
-    const spaceNode = spaceRefs.current.get(destination);
-    if (spaceNode) {
-      const { top, bottom } = spaceNode.getBoundingClientRect();
-      switch (direction) {
-        case "down":
-          if (bottom + SCROLL_BUFFER > window.innerHeight) {
+    const autoScroll = () => {
+      if (
+        game.currentTurn.phase === "roll" ||
+        game.currentTurn.phase === "drop"
+      ) {
+        if (currentPlayerPosition < 0) {
+          window.scroll({ behavior: "smooth", top: 0 });
+        }
+        const spaceNode = spaceRefs.current.get(currentPlayerPosition);
+        if (!spaceNode) {
+          return;
+        }
+        const { top, height } = spaceNode.getBoundingClientRect();
+        // Scroll player position into middle of window
+        window.scroll({
+          behavior: "smooth",
+          top: window.scrollY + top - (window.innerHeight - height) / 2,
+        });
+      } else {
+        const { destination, direction } = game.uiMetadata.mostRecentRoll;
+        const spaceNode = spaceRefs.current.get(destination);
+        if (!spaceNode) {
+          return;
+        }
+        const { top, height, bottom } = spaceNode.getBoundingClientRect();
+        if (
+          top > SCROLL_BUFFER &&
+          top + height + SCROLL_BUFFER < window.innerHeight
+        ) {
+          return;
+        }
+        switch (direction) {
+          case "down":
             window.scroll({
               behavior: "smooth",
               top:
                 window.scrollY + (bottom + SCROLL_BUFFER - window.innerHeight),
             });
-          }
-          break;
-        case "up":
-          if (top - SCROLL_BUFFER < 0) {
+            break;
+          case "up":
             window.scroll({
               behavior: "smooth",
               top: window.scrollY + (top - SCROLL_BUFFER),
             });
-          }
+        }
       }
+    };
+    if (game.uiMetadata.lastActionDelay) {
+      const timer = setTimeout(autoScroll, 1000);
+      return () => clearTimeout(timer);
+    } else {
+      autoScroll();
     }
-  }, [game?.uiMetadata?.mostRecentRoll, animationStage.kind]);
+  }, [
+    currentPlayerPosition,
+    game?.currentTurn?.phase,
+    game?.uiMetadata?.mostRecentRoll,
+    game?.uiMetadata?.lastActionDelay,
+    animationStage.kind,
+  ]);
 
   const spaceRefs = useRef(new Map<number, HTMLLIElement>());
   const setSpaceRef = (i: number, e: HTMLLIElement | null) => {
@@ -103,7 +145,9 @@ function Game({
 
   return (
     <div
-      className="Game"
+      className={classnames("Game", {
+        "Game--over": game?.currentTurn?.phase === "gameOver",
+      })}
       style={{
         maxHeight:
           animationStage.kind === "wide"
@@ -147,8 +191,13 @@ function Game({
                   ref={(e) => setSpaceRef(i, e)}
                 >
                   {space.loot.length > 0 ? (
-                    space.loot.map(({ level }, j) => (
-                      <Loot key={j} level={level} />
+                    space.loot.map(({ id, level }, j) => (
+                      <Loot
+                        className="Game-spaceLoot"
+                        key={j}
+                        level={level}
+                        layoutId={id}
+                      />
                     ))
                   ) : (
                     <span className="Game-blankSpace" />
@@ -173,24 +222,92 @@ function Game({
             <ol className="Game-players">
               {(game?.path ?? []).map(({ id, playerId }, i) => (
                 <li className="Game-space" key={id}>
-                  {playerId && (
-                    <Meeple
-                      className="Game-spaceDiver"
-                      color={game!.players[playerId].color}
-                      layoutId="gameBoard"
-                    />
-                  )}
+                  {playerId && <Diver player={game!.players[playerId]} />}
                 </li>
               ))}
             </ol>
           </div>
         </div>
       </LayoutGroup>
+      <div className="Game-minimap">
+        <span className="Game-oxygen">{game?.oxygen ?? 25}</span>
+        <span className="Game-round">round {game?.round ?? 1} of 3</span>
+        <ol className="Game-depthIndicator">
+          {game?.path &&
+            game.path.map((s) => (
+              <li key={s.id} className="Game-depthLevel">
+                -
+                {s.playerId && (
+                  <motion.span
+                    className={classnames(
+                      "Game-minimapPlayer",
+                      `Game-minimapPlayer--${game.players[s.playerId].color}`,
+                    )}
+                    layout
+                    layoutId={`minimap_${s.playerId}`}
+                    transition={{ delay: 1 }}
+                  />
+                )}
+              </li>
+            ))}
+        </ol>
+      </div>
       <div className="Game-scoreCard">
         <ol className="Game-playerList"></ol>
       </div>
-      {roomId && game && game.currentTurn?.playerId === userId && (
-        <div className="Game-controls">{renderControls(game, roomId)}</div>
+      {roomId &&
+        game &&
+        game.currentTurn?.phase !== "gameOver" &&
+        game.currentTurn?.playerId === userId && (
+          <motion.div
+            className="Game-controls"
+            initial={{ translateY: "100%" }}
+            animate={{ translateY: 0 }}
+            transition={{
+              delay: game.uiMetadata.lastActionDelay ? 1 : undefined,
+              ease: "circOut",
+            }}
+          >
+            {renderControls(game, roomId)}
+          </motion.div>
+        )}
+      {game?.currentTurn?.phase === "gameOver" && (
+        <div className="Game-gameOver">
+          <TitleCard title="Game Over">
+            <ol>
+              {Object.values(game.players)
+                .sort(
+                  (p1, p2) =>
+                    p2.score.reduce((s, [l]) => s + l.value, 0) -
+                    p1.score.reduce((s, [l]) => s + l.value, 0),
+                )
+                .map((p) => (
+                  <li key={p.id}>
+                    <Meeple color={p.color} />
+                    {p.name} {p.score.reduce((s, [l]) => s + l.value, 0)}
+                    {[1, 2, 3].map((round, i) => {
+                      const roundLoot = p.score.filter(([, r]) => r === round);
+                      if (roundLoot.length === 0) {
+                        return null;
+                      }
+                      return (
+                        <>
+                          <span>{round}</span>
+                          <ul className="Game-summaryLoot">
+                            {roundLoot.map(([{ level, value }], i) => (
+                              <li key={i}>
+                                <Loot level={level} value={value} />
+                              </li>
+                            ))}
+                          </ul>
+                        </>
+                      );
+                    })}
+                  </li>
+                ))}
+            </ol>
+          </TitleCard>
+        </div>
       )}
     </div>
   );
@@ -199,9 +316,10 @@ function Game({
 export default Game;
 
 const renderControls = (game: GameState, roomId: string) => {
+  const player = game.players[game.currentTurn.playerId];
   switch (game.currentTurn.phase) {
     case "roll":
-      if (game.players[game.currentTurn.playerId].position < 0) {
+      if (player.position < 0) {
         return (
           <GameButton
             key="dive"
@@ -211,7 +329,11 @@ const renderControls = (game: GameState, roomId: string) => {
             dive
           </GameButton>
         );
-      } else if (game.players[game.currentTurn.playerId].direction === "up") {
+      } else if (
+        player.direction === "up" ||
+        // No deeper spaces are available; must go up
+        game.path.every((s, i) => i <= player.position || s.playerId)
+      ) {
         return (
           <GameButton
             key="surface"
@@ -242,16 +364,38 @@ const renderControls = (game: GameState, roomId: string) => {
         </>
       );
     case "search":
+      if (player.position === -1) {
+        return (
+          <GameButton
+            key="pass"
+            roomId={roomId}
+            action={{ type: "SEARCH", kind: "pass" }}
+          >
+            yay!
+          </GameButton>
+        );
+      }
       return (
         <>
-          <GameButton
-            key="surface"
-            className="Game-secondaryButton"
-            roomId={roomId}
-            action={{ type: "SEARCH", kind: "grab" }}
-          >
-            pick up
-          </GameButton>
+          {game.path[player.position].loot.length > 0 ? (
+            <GameButton
+              key="grab"
+              className="Game-secondaryButton"
+              roomId={roomId}
+              action={{ type: "SEARCH", kind: "grab" }}
+            >
+              pick up
+            </GameButton>
+          ) : player.hand.length > 0 ? (
+            <GameButton
+              key="drop"
+              className="Game-secondaryButton"
+              roomId={roomId}
+              action={{ type: "SEARCH", kind: "place", index: 0 }} // FIXME
+            >
+              drop loot
+            </GameButton>
+          ) : null}
           <GameButton
             key="pass"
             roomId={roomId}
@@ -262,6 +406,12 @@ const renderControls = (game: GameState, roomId: string) => {
         </>
       );
     case "drop":
+      return (
+        <GameButton key="drop" roomId={roomId} action={{ type: "DROP" }}>
+          oops...
+        </GameButton>
+      );
+
     case "gameOver":
       return null;
   }
