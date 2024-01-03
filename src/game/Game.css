@@ -116,6 +116,57 @@
   color: var(--dark-blue);
 }
 
+.DropButton {
+  display: inline-block;
+  margin-right: 1em;
+  position: relative;
+}
+
+.DropButton .Game-secondaryButton {
+  margin-right: 0;
+}
+
+.DropButton-selector {
+  align-items: center;
+  background: white;
+  border-radius: 1.7em;
+  bottom: calc(100% + 0.8em);
+  display: flex;
+  left: 50%;
+  padding: 0.4em;
+  position: absolute;
+  transform: translateX(-50%);
+  z-index: 0;
+}
+
+.DropButton-lootButton {
+  align-items: center;
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-flex;
+  flex-direction: column;
+  height: 3em;
+  justify-content: center;
+  width: 3em;
+}
+
+.DropButton-selected {
+  border-radius: 50%;
+  background: var(--light-blue);
+  display: inline-block;
+  height: 3em;
+  position: absolute;
+  width: 3em;
+  z-index: -1;
+}
+
+.DropButton-loot {
+  font-size: 0.5em;
+}
+.DropButton-loot + .DropButton-loot {
+  margin-top: -3em;
+}
+
 .Game-minimap {
   align-items: stretch;
   box-sizing: border-box;

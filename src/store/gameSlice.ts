@@ -30,6 +30,21 @@ interface GameOver {
   phase: "gameOver";
 }
 
+interface RollAnimation {
+  kind: "roll";
+  destination: number;
+  direction: "up" | "down";
+  steps: number[];
+}
+
+interface SearchAnimation {
+  kind: "search";
+}
+
+interface DropAnimation {
+  kind: "drop";
+}
+
 export interface GameState {
   round: number;
   currentTurn: RollTurn | SearchTurn | DropTurn | GameOver;
@@ -40,12 +55,7 @@ export interface GameState {
 
   uiMetadata: {
     isPendingAction: boolean;
-    lastActionDelay: boolean;
-    mostRecentRoll: {
-      destination: number;
-      direction: "up" | "down";
-      steps: number[];
-    };
+    animate?: RollAnimation | SearchAnimation | DropAnimation;
   };
 }
 
@@ -55,18 +65,18 @@ export interface PlayerState {
   color: PlayerColor;
   position: number;
   direction: "up" | "down";
-  hand: Loot[][];
-  score: [Loot, number][]; // loot and the round it was retrieved
+  hand: LootT[][];
+  score: [LootT, number][]; // loot and the round it was retrieved
 }
 
-interface Loot {
+export interface LootT {
   id: number;
   level: number;
   value: number;
 }
 
 // 2 of each value from 0 to 15
-export const ALL_LOOT: Loot[] = new Array(32).fill(null).map((_, i) => ({
+export const ALL_LOOT: LootT[] = new Array(32).fill(null).map((_, i) => ({
   id: i,
   level: Math.floor(i / 8) + 1,
   value: Math.floor(i / 2),
@@ -75,7 +85,7 @@ export const ALL_LOOT: Loot[] = new Array(32).fill(null).map((_, i) => ({
 interface GameSpace {
   id: string;
   playerId?: string;
-  loot: Loot[];
+  loot: LootT[];
 }
 
 export type GameActionPayload =
@@ -141,12 +151,7 @@ const initGame = (payload: Published<StartPayload>): GameState => {
     path: allLoot.map((loot, i) => ({ id: `loot_${i}`, loot: [loot] })),
     uiMetadata: {
       isPendingAction: false,
-      lastActionDelay: false,
-      mostRecentRoll: {
-        destination: -1,
-        direction: "down",
-        steps: [],
-      },
+      animate: undefined,
     },
   };
 };
@@ -178,9 +183,8 @@ export const gameSlice = createSlice({
       state = {
         ...state,
         uiMetadata: {
-          ...state.uiMetadata,
-          lastActionDelay: false,
           isPendingAction: false,
+          animate: undefined,
         },
       };
       for (const gameAction of payload) {
@@ -272,7 +276,7 @@ export const roll = (
                 ...player.score,
                 ...player.hand
                   .flat()
-                  .map((l): [Loot, number] => [l, state.round]),
+                  .map((l): [LootT, number] => [l, state.round]),
               ]
             : player.score,
         hand: dest < 0 ? [] : player.hand,
@@ -289,8 +293,8 @@ export const roll = (
     })),
     uiMetadata: {
       ...state.uiMetadata,
-      lastActionDelay: dest < 0,
-      mostRecentRoll: {
+      animate: {
+        kind: "roll",
         destination: dest,
         direction,
         steps,
@@ -332,7 +336,7 @@ const search = (
         ),
         uiMetadata: {
           ...state.uiMetadata,
-          lastActionDelay: true, // let animation resolve before moving on
+          animate: { kind: "search" },
         },
       });
     case "place":
@@ -356,7 +360,7 @@ const search = (
         ),
         uiMetadata: {
           ...state.uiMetadata,
-          lastActionDelay: true, // let animation resolve before moving on
+          animate: { kind: "search" },
         },
       });
   }
@@ -409,7 +413,7 @@ const drop = (state: GameState, payload: Published<DropPayload>): GameState => {
     ),
     uiMetadata: {
       ...state.uiMetadata,
-      lastActionDelay: true, // animate drowning
+      animate: { kind: "drop" },
     },
   };
   const drowned = currentTurn.drowned;
@@ -468,11 +472,7 @@ const endRound = (state: GameState): GameState => {
       currentTurn: { phase: "gameOver" },
       uiMetadata: {
         ...state.uiMetadata,
-        mostRecentRoll: {
-          destination: -1,
-          direction: "down",
-          steps: [],
-        },
+        animate: undefined,
       },
     };
   }
