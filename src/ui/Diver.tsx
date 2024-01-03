@@ -1,13 +1,19 @@
 import classnames from "classnames";
 import { motion } from "framer-motion";
-import { PlayerState, selectCurrentPlayerId } from "../store/gameSlice";
+import {
+  PlayerState,
+  selectCurrentPlayerId,
+  selectRollState,
+} from "../store/gameSlice";
 import Meeple from "./Meeple";
 import Loot from "./Loot";
 import "./Diver.css";
 import { useAppSelector } from "../store/store";
+import Dice from "./Dice";
 
 function Diver({ player }: { player: PlayerState }) {
   const currentPlayerId = useAppSelector(selectCurrentPlayerId);
+  const rollState = useAppSelector(selectRollState);
   return (
     <motion.div
       className={classnames("Diver", `Diver--${player.color}`, {
@@ -15,7 +21,7 @@ function Diver({ player }: { player: PlayerState }) {
       })}
       initial={false}
       layout
-      layoutId={`diver_${player.color}`}
+      layoutId={`diver_${player.color}_${player.id}`}
       transition={{
         duration: 0.3,
         ease: "circOut",
@@ -38,6 +44,13 @@ function Diver({ player }: { player: PlayerState }) {
             </li>
           ))}
         </ul>
+      )}
+      {rollState?.playerId === player.id && (
+        // TODO delay appearance when beginning round
+        <Dice
+          className="Diver-dice"
+          rolls={rollState.kind === "rolled" ? rollState.dice : undefined}
+        />
       )}
     </motion.div>
   );

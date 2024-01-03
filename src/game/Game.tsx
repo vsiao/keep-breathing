@@ -8,6 +8,7 @@ import { store, useAppSelector } from "../store/store";
 import {
   GameActionPayload,
   GameState,
+  LootT,
   gameSlice,
   selectGame,
   selectIsPendingAction,
@@ -34,7 +35,7 @@ function Game({ roomId, userId }: { roomId?: string; userId?: string }) {
     kind: "initialRender",
   });
 
-  const isGamePathLoaded = !!game?.path;
+  const isGamePathLoaded = !!game?.path.length;
   useLayoutEffect(() => {
     if (!gameRef.current || !isGamePathLoaded) {
       return;
@@ -59,12 +60,14 @@ function Game({ roomId, userId }: { roomId?: string; userId?: string }) {
       : game?.players && game.players[game.currentTurn.playerId].position;
   useEffect(() => {
     if (
-      !game?.uiMetadata?.mostRecentRoll ||
-      currentPlayerPosition === undefined ||
-      animationStage.kind !== "complete"
+      animationStage.kind !== "complete" ||
+      currentPlayerPosition === undefined
     ) {
       return;
     }
+    // Auto-scroll if:
+    // - current player is beginning a roll or drop turn
+    // - previous action was a roll (implying current phase is search)
     const autoScroll = () => {
       if (currentPlayerPosition < 0) {
         window.scroll({ behavior: "smooth", top: 0 });
@@ -83,8 +86,8 @@ function Game({ roomId, userId }: { roomId?: string; userId?: string }) {
           behavior: "smooth",
           top: window.scrollY + top - (window.innerHeight - height) / 2,
         });
-      } else {
-        const { destination, direction } = game.uiMetadata.mostRecentRoll;
+      } else if (game.uiMetadata.animate?.kind === "roll") {
+        const { destination, direction } = game.uiMetadata.animate;
         const spaceNode = spaceRefs.current.get(destination);
         if (!spaceNode) {
           return;
@@ -112,7 +115,7 @@ function Game({ roomId, userId }: { roomId?: string; userId?: string }) {
         }
       }
     };
-    if (game.uiMetadata.lastActionDelay) {
+    if (game.uiMetadata.animate) {
       const timer = setTimeout(autoScroll, 1000);
       return () => clearTimeout(timer);
     } else {
@@ -121,8 +124,7 @@ function Game({ roomId, userId }: { roomId?: string; userId?: string }) {
   }, [
     currentPlayerPosition,
     game?.currentTurn?.phase,
-    game?.uiMetadata?.mostRecentRoll,
-    game?.uiMetadata?.lastActionDelay,
+    game?.uiMetadata?.animate,
     animationStage.kind,
   ]);
 
@@ -172,40 +174,46 @@ function Game({ roomId, userId }: { roomId?: string; userId?: string }) {
             className="Game-submarine"
             players={Object.values(game.players).filter((p) => p.position < 0)}
           >
-            {game.uiMetadata.mostRecentRoll.destination === -1 &&
-              game.uiMetadata.mostRecentRoll.steps.length > 0 &&
-              renderStepIndicator(
-                -1,
-                game.uiMetadata.mostRecentRoll.steps.length - 1,
-              )}
+            {game.uiMetadata.animate?.kind === "roll" &&
+              game.uiMetadata.animate.destination === -1 &&
+              game.uiMetadata.animate.steps.length > 0 &&
+              renderStepIndicator(-1, game.uiMetadata.animate.steps.length - 1)}
           </Submarine>
           <div className="Game-path">
             <ol className="Game-loots">
-              {game.path.map((space, i) => (
-                <li
-                  className="Game-space"
-                  key={space.id}
-                  ref={(e) => setSpaceRef(i, e)}
-                >
-                  {space.loot.length > 0 ? (
-                    space.loot.map(({ id, level }, j) => (
-                      <Loot
-                        className="Game-spaceLoot"
-                        key={id}
-                        level={level}
-                        layoutId={id}
-                      />
-                    ))
-                  ) : (
-                    <span className="Game-blankSpace" />
-                  )}
-                  {game.uiMetadata.mostRecentRoll.steps.includes(i) &&
-                    renderStepIndicator(
-                      game.uiMetadata.mostRecentRoll.destination,
-                      game.uiMetadata.mostRecentRoll.steps.indexOf(i),
+              <AnimatePresence>
+                {game.path.map((space, i) => (
+                  <motion.li
+                    className="Game-space"
+                    key={space.id}
+                    ref={(e) => setSpaceRef(i, e)}
+                    exit={{ height: 0, margin: 0, opacity: 0 }}
+                    transition={{
+                      delay: game.uiMetadata.animate?.kind === "drop" ? 2 : 1,
+                    }}
+                  >
+                    {space.loot.length > 0 ? (
+                      space.loot.map(({ id, level }, j) => (
+                        <Loot
+                          className="Game-spaceLoot"
+                          key={id}
+                          level={level}
+                          layoutId={id}
+                          delay={game.uiMetadata.animate?.kind === "drop"}
+                        />
+                      ))
+                    ) : (
+                      <span className="Game-blankSpace" />
                     )}
-                </li>
-              ))}
+                    {game.uiMetadata.animate?.kind === "roll" &&
+                      game.uiMetadata.animate.steps.includes(i) &&
+                      renderStepIndicator(
+                        game.uiMetadata.animate.destination,
+                        game.uiMetadata.animate.steps.indexOf(i),
+                      )}
+                  </motion.li>
+                ))}
+              </AnimatePresence>
             </ol>
             <ol className="Game-players">
               {game.path.map(({ id, playerId }, i) => (
@@ -219,7 +227,20 @@ function Game({ roomId, userId }: { roomId?: string; userId?: string }) {
       </LayoutGroup>
       {game.currentTurn.phase !== "gameOver" && (
         <div className="Game-minimap">
-          <span className="Game-oxygen">{game.oxygen}</span>
+          <motion.span
+            key={game.oxygen}
+            className="Game-oxygen"
+            initial={{ translateX: "-50%" }}
+            animate={{
+              scale: game.oxygen === 25 ? undefined : [null, 1.8, 1.8, 1],
+            }}
+            transition={{
+              times: [0, 0.1, 0.9, 1],
+              duration: 3,
+            }}
+          >
+            {game.oxygen}
+          </motion.span>
           <span className="Game-round">round {game.round} of 3</span>
           <ol className="Game-depthIndicator">
             {game.path.map((s) => (
@@ -272,28 +293,49 @@ function Game({ roomId, userId }: { roomId?: string; userId?: string }) {
         </ol>
       </motion.div>
       <AnimatePresence>
-        {roomId && game.currentTurn.phase !== "gameOver" && (
-          <motion.div
-            key={
-              game.currentTurn.playerId === userId
-                ? `${game.currentTurn.playerId}_${game.currentTurn.phase}`
-                : // Don't animate between other player's move phases
-                  game.currentTurn.playerId
-            }
-            className="Game-controls"
-            initial={{ translateY: "100%" }}
-            animate={{ translateY: 0 }}
-            transition={{
-              delay: game.uiMetadata.lastActionDelay ? 1 : undefined,
-              ease: "circOut",
-            }}
-            exit={{ translateY: "100%", transition: { delay: 0 } }}
-            layout
-          >
-            {renderControls(game, roomId, userId)}
-          </motion.div>
-        )}
+        {roomId &&
+          game.currentTurn.phase !== "start" &&
+          game.currentTurn.phase !== "gameOver" && (
+            <motion.div
+              key={
+                game.currentTurn.playerId === userId
+                  ? `${game.currentTurn.playerId}_${game.currentTurn.phase}`
+                  : // Don't animate between other player's move phases
+                    game.currentTurn.playerId
+              }
+              className="Game-controls"
+              initial={{ translateY: "100%" }}
+              animate={{ translateY: 0 }}
+              transition={{
+                delay: !game.uiMetadata.animate
+                  ? undefined
+                  : game.uiMetadata.animate.kind === "roll"
+                    ? 2
+                    : 1,
+                ease: "circOut",
+              }}
+              exit={{ translateY: "100%", transition: { delay: 0 } }}
+              layout
+            >
+              {renderControls(game, roomId, userId)}
+            </motion.div>
+          )}
       </AnimatePresence>
+      {((game.uiMetadata.animate?.kind === "drop" && game.oxygen === 25) ||
+        game.uiMetadata.animate?.kind === "beginRound") && (
+        <motion.div
+          className="Game-roundBanner"
+          initial={{ translateX: "-100%" }}
+          animate={{ translateX: [null, "0%", "0%", "100%"] }}
+          transition={{
+            times: [0, 0.1, 0.9, 1],
+            duration: 3,
+            ease: "circInOut",
+          }}
+        >
+          {`Round ${game.round}`}
+        </motion.div>
+      )}
       {game.currentTurn.phase === "gameOver" && (
         <div className="Game-gameOver">
           <div className="Game-gameOverCard">
@@ -462,14 +504,7 @@ const renderControls = (
               pick up
             </GameButton>
           ) : player.hand.length > 0 ? (
-            <GameButton
-              key="drop"
-              className="Game-secondaryButton"
-              roomId={roomId}
-              action={{ type: "SEARCH", kind: "place", index: 0 }} // FIXME
-            >
-              drop loot
-            </GameButton>
+            <DropButton roomId={roomId} hand={player.hand} />
           ) : null}
           <GameButton
             key="pass"
@@ -492,6 +527,49 @@ const renderControls = (
       );
   }
 };
+
+function DropButton({ roomId, hand }: { roomId: string; hand: LootT[][] }) {
+  const [index, setIndex] = useState(0);
+
+  return (
+    <div className="DropButton">
+      <GameButton
+        className="Game-secondaryButton"
+        roomId={roomId}
+        action={{ type: "SEARCH", kind: "place", index }}
+      >
+        drop loot
+      </GameButton>
+      <motion.ul
+        className="DropButton-selector"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1, transition: { delay: 2 } }}
+        exit={{ opacity: 0 }}
+      >
+        {hand.map((loot, i) => (
+          <li key={i}>
+            <button
+              className="DropButton-lootButton"
+              onClick={() => setIndex(i)}
+            >
+              {index === i && (
+                <motion.span
+                  className="DropButton-selected"
+                  layout
+                  layoutId="DropButton-selected"
+                  transition={{ duration: 0.15 }}
+                />
+              )}
+              {loot.map(({ level }, j) => (
+                <Loot className="DropButton-loot" key={j} level={level} />
+              ))}
+            </button>
+          </li>
+        ))}
+      </motion.ul>
+    </div>
+  );
+}
 
 function GameButton({
   className,

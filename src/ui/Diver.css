@@ -44,3 +44,10 @@
 .Diver-loot + .Diver-loot {
   margin-top: -3em;
 }
+
+.Diver-dice {
+  right: calc(100% + 2em);
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}

@@ -116,11 +116,62 @@
   color: var(--dark-blue);
 }
 
+.DropButton {
+  display: inline-block;
+  margin-right: 1em;
+  position: relative;
+}
+
+.DropButton .Game-secondaryButton {
+  margin-right: 0;
+}
+
+.DropButton-selector {
+  align-items: center;
+  background: white;
+  border-radius: 1.7em;
+  bottom: calc(100% + 0.8em);
+  display: flex;
+  left: 50%;
+  padding: 0.4em;
+  position: absolute;
+  transform: translateX(-50%);
+  z-index: 0;
+}
+
+.DropButton-lootButton {
+  align-items: center;
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-flex;
+  flex-direction: column;
+  height: 3em;
+  justify-content: center;
+  width: 3em;
+}
+
+.DropButton-selected {
+  border-radius: 50%;
+  background: var(--light-blue);
+  display: inline-block;
+  height: 3em;
+  position: absolute;
+  width: 3em;
+  z-index: -1;
+}
+
+.DropButton-loot {
+  font-size: 0.5em;
+}
+.DropButton-loot + .DropButton-loot {
+  margin-top: -3em;
+}
+
 .Game-minimap {
   align-items: stretch;
   box-sizing: border-box;
   display: flex;
-  padding: 3em 2em 8em;
+  padding: 2.8em 1.8em 8em;
   height: 100vh;
   left: 0;
   position: fixed;
@@ -142,6 +193,7 @@
   top: 1em;
   transform: translateX(-50%);
   width: 2em;
+  z-index: 100;
 }
 
 .Game-round {
@@ -165,15 +217,18 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  padding: 0.4em 0;
+  width: 0.4em;
 }
 
 .Game-depthLevel {
   align-items: center;
-  background: white;
+  background: rgba(255, 255, 255, 0.8);
   display: flex;
+  flex-shrink: 0;
   height: 1px;
   justify-content: center;
-  margin: 0.4em 0;
+  margin: 0.3em 0;
   position: relative;
   width: 0.4em;
 }
@@ -280,6 +335,17 @@
   display: flex;
   font-size: 0.3em;
   margin-left: 1em;
+}
+
+.Game-roundBanner {
+  background: white;
+  font-size: 2em;
+  position: absolute;
+  padding: 0.8em 0;
+  text-align: center;
+  top: 40vh;
+  width: 100vw;
+  z-index: 200;
 }
 
 .Game-gameOver {

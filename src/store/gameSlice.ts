@@ -1,5 +1,5 @@
 import alea from "alea";
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { PlayerColor } from "../game/config";
 import type { RootState } from "./store";
 
@@ -12,6 +12,35 @@ export const selectCurrentPlayerId = (state: RootState): string | undefined =>
   state.game.currentTurn.phase !== "gameOver"
     ? state.game.currentTurn.playerId
     : undefined;
+
+const selectRollingPlayer = (state: RootState) =>
+  state.game.currentTurn.phase === "roll"
+    ? state.game.currentTurn.playerId
+    : null;
+const selectRolledMetadata = (state: RootState) =>
+  state.game.uiMetadata.animate?.kind === "roll"
+    ? state.game.uiMetadata.animate
+    : null;
+export const selectRollState = createSelector(
+  [selectRollingPlayer, selectRolledMetadata],
+  (rolling, rolled) => {
+    if (rolling) {
+      return { kind: "rolling" as const, playerId: rolling };
+    } else if (rolled) {
+      return {
+        kind: "rolled" as const,
+        playerId: rolled.playerId,
+        dice: rolled.dice,
+      };
+    }
+    return null;
+  },
+);
+
+interface StartTurn {
+  phase: "start";
+  playerId: string;
+}
 
 interface RollTurn {
   phase: "roll";
@@ -30,9 +59,30 @@ interface GameOver {
   phase: "gameOver";
 }
 
+interface BeginRoundAnimation {
+  kind: "beginRound";
+}
+
+interface RollAnimation {
+  kind: "roll";
+  playerId: string;
+  dice: [number, number];
+  destination: number;
+  direction: "up" | "down";
+  steps: number[];
+}
+
+interface SearchAnimation {
+  kind: "search";
+}
+
+interface DropAnimation {
+  kind: "drop";
+}
+
 export interface GameState {
   round: number;
-  currentTurn: RollTurn | SearchTurn | DropTurn | GameOver;
+  currentTurn: StartTurn | RollTurn | SearchTurn | DropTurn | GameOver;
   oxygen: number;
   playerOrder: string[];
   players: Record<string, PlayerState>;
@@ -40,12 +90,11 @@ export interface GameState {
 
   uiMetadata: {
     isPendingAction: boolean;
-    lastActionDelay: boolean;
-    mostRecentRoll: {
-      destination: number;
-      direction: "up" | "down";
-      steps: number[];
-    };
+    animate?:
+      | BeginRoundAnimation
+      | RollAnimation
+      | SearchAnimation
+      | DropAnimation;
   };
 }
 
@@ -55,18 +104,18 @@ export interface PlayerState {
   color: PlayerColor;
   position: number;
   direction: "up" | "down";
-  hand: Loot[][];
-  score: [Loot, number][]; // loot and the round it was retrieved
+  hand: LootT[][];
+  score: [LootT, number][]; // loot and the round it was retrieved
 }
 
-interface Loot {
+export interface LootT {
   id: number;
   level: number;
   value: number;
 }
 
 // 2 of each value from 0 to 15
-export const ALL_LOOT: Loot[] = new Array(32).fill(null).map((_, i) => ({
+export const ALL_LOOT: LootT[] = new Array(32).fill(null).map((_, i) => ({
   id: i,
   level: Math.floor(i / 8) + 1,
   value: Math.floor(i / 2),
@@ -75,7 +124,7 @@ export const ALL_LOOT: Loot[] = new Array(32).fill(null).map((_, i) => ({
 interface GameSpace {
   id: string;
   playerId?: string;
-  loot: Loot[];
+  loot: LootT[];
 }
 
 export type GameActionPayload =
@@ -141,29 +190,35 @@ const initGame = (payload: Published<StartPayload>): GameState => {
     path: allLoot.map((loot, i) => ({ id: `loot_${i}`, loot: [loot] })),
     uiMetadata: {
       isPendingAction: false,
-      lastActionDelay: false,
-      mostRecentRoll: {
-        destination: -1,
-        direction: "down",
-        steps: [],
-      },
+      animate: { kind: "beginRound" },
     },
   };
 };
 
+const BLANK_STATE: GameState = {
+  currentTurn: { phase: "start", playerId: "FAKE_ID" },
+  oxygen: 25,
+  path: [],
+  playerOrder: [],
+  players: {
+    FAKE_ID: {
+      color: "red",
+      direction: "down",
+      hand: [],
+      id: "FAKE_ID",
+      name: "Dipsy Diver",
+      position: -1,
+      score: [],
+    },
+  },
+  round: 1,
+  uiMetadata: {
+    isPendingAction: false,
+  },
+};
 export const gameSlice = createSlice({
   name: "game",
-  initialState: initGame({
-    players: [
-      {
-        color: "red",
-        id: "FAKE_USER",
-        name: "Dipsy Diver",
-      },
-    ],
-    ts: 0,
-    type: "START",
-  }),
+  initialState: BLANK_STATE,
   reducers: {
     setPendingAction(state) {
       return {
@@ -175,15 +230,14 @@ export const gameSlice = createSlice({
       };
     },
     applyMulti(state: GameState, { payload }: PublishedGameActions) {
-      state = {
-        ...state,
-        uiMetadata: {
-          ...state.uiMetadata,
-          lastActionDelay: false,
-          isPendingAction: false,
-        },
-      };
       for (const gameAction of payload) {
+        state = {
+          ...state,
+          uiMetadata: {
+            isPendingAction: false,
+            animate: undefined,
+          },
+        };
         switch (gameAction.type) {
           case "START":
             state = initGame(gameAction);
@@ -202,17 +256,7 @@ export const gameSlice = createSlice({
       return state;
     },
     resetGame(state) {
-      return initGame({
-        players: [
-          {
-            color: "red",
-            id: "FAKE_USER",
-            name: "Dipsy Diver",
-          },
-        ],
-        ts: 0,
-        type: "START",
-      });
+      return BLANK_STATE;
     },
   },
 });
@@ -235,7 +279,9 @@ export const roll = (
 
   const random = alea(payload.ts);
   const rollDie = () => 1 + Math.floor(3 * random()); // 1, 2, or 3
-  let roll = rollDie() + rollDie() - player.hand.length;
+  const die1 = rollDie();
+  const die2 = rollDie();
+  let roll = die1 + die2 - player.hand.length;
   const steps = [];
   for (; roll > 0; --roll) {
     shift();
@@ -272,7 +318,7 @@ export const roll = (
                 ...player.score,
                 ...player.hand
                   .flat()
-                  .map((l): [Loot, number] => [l, state.round]),
+                  .map((l): [LootT, number] => [l, state.round]),
               ]
             : player.score,
         hand: dest < 0 ? [] : player.hand,
@@ -289,8 +335,10 @@ export const roll = (
     })),
     uiMetadata: {
       ...state.uiMetadata,
-      lastActionDelay: dest < 0,
-      mostRecentRoll: {
+      animate: {
+        kind: "roll",
+        playerId: player.id,
+        dice: [die1, die2],
         destination: dest,
         direction,
         steps,
@@ -332,7 +380,7 @@ const search = (
         ),
         uiMetadata: {
           ...state.uiMetadata,
-          lastActionDelay: true, // let animation resolve before moving on
+          animate: { kind: "search" },
         },
       });
     case "place":
@@ -356,7 +404,7 @@ const search = (
         ),
         uiMetadata: {
           ...state.uiMetadata,
-          lastActionDelay: true, // let animation resolve before moving on
+          animate: { kind: "search" },
         },
       });
   }
@@ -409,7 +457,7 @@ const drop = (state: GameState, payload: Published<DropPayload>): GameState => {
     ),
     uiMetadata: {
       ...state.uiMetadata,
-      lastActionDelay: true, // animate drowning
+      animate: { kind: "drop" },
     },
   };
   const drowned = currentTurn.drowned;
@@ -468,11 +516,7 @@ const endRound = (state: GameState): GameState => {
       currentTurn: { phase: "gameOver" },
       uiMetadata: {
         ...state.uiMetadata,
-        mostRecentRoll: {
-          destination: -1,
-          direction: "down",
-          steps: [],
-        },
+        animate: undefined,
       },
     };
   }
@@ -500,9 +544,16 @@ const endRound = (state: GameState): GameState => {
         ]),
       ),
       path: state.path.filter((space) => space.loot.length > 0),
+
+      // drop animation takes precedence, but add new round animation otherwise
+      uiMetadata: state.uiMetadata.animate
+        ? state.uiMetadata
+        : {
+            ...state.uiMetadata,
+            animate: { kind: "beginRound" },
+          },
     };
   } else {
-    // TODO auto-drop maybe?
     return {
       ...state,
       currentTurn: {
