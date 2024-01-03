@@ -1,0 +1,52 @@
+.Dice {
+  display: flex;
+  flex-direction: column;
+}
+
+.Dice-1,
+.Dice-2 {
+  background: white;
+  border-radius: 0.2em;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.3);
+  height: 1.6em;
+  position: relative;
+  width: 1.6em;
+}
+
+.Dice-1 {
+  margin-bottom: 0.6em;
+}
+
+.Dice-side {
+  align-items: center;
+  display: inline-flex;
+  height: 100%;
+  justify-content: center;
+  left: 0;
+  position: absolute;
+  transform: rotate(45deg);
+  width: 100%;
+}
+
+.Dice-pip,
+.Dice-side1::before,
+.Dice-side2::before,
+.Dice-side2::after,
+.Dice-side3::before,
+.Dice-side3::after {
+  background: var(--med-blue);
+  border-radius: 50%;
+  content: "";
+  height: 0.4em;
+  display: inline-block;
+  width: 0.4em;
+}
+
+.Dice-side2::before {
+  margin-right: 0.5em;
+}
+
+.Dice-pip,
+.Dice-side3::before {
+  margin-right: 0.2em;
+}

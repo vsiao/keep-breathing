@@ -1,5 +1,5 @@
 import alea from "alea";
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { PlayerColor } from "../game/config";
 import type { RootState } from "./store";
 
@@ -12,6 +12,30 @@ export const selectCurrentPlayerId = (state: RootState): string | undefined =>
   state.game.currentTurn.phase !== "gameOver"
     ? state.game.currentTurn.playerId
     : undefined;
+
+const selectRollingPlayer = (state: RootState) =>
+  state.game.currentTurn.phase === "roll"
+    ? state.game.currentTurn.playerId
+    : null;
+const selectRolledMetadata = (state: RootState) =>
+  state.game.uiMetadata.animate?.kind === "roll"
+    ? state.game.uiMetadata.animate
+    : null;
+export const selectRollState = createSelector(
+  [selectRollingPlayer, selectRolledMetadata],
+  (rolling, rolled) => {
+    if (rolling) {
+      return { kind: "rolling" as const, playerId: rolling };
+    } else if (rolled) {
+      return {
+        kind: "rolled" as const,
+        playerId: rolled.playerId,
+        dice: rolled.dice,
+      };
+    }
+    return null;
+  },
+);
 
 interface StartTurn {
   phase: "start";
@@ -41,6 +65,8 @@ interface BeginRoundAnimation {
 
 interface RollAnimation {
   kind: "roll";
+  playerId: string;
+  dice: [number, number];
   destination: number;
   direction: "up" | "down";
   steps: number[];
@@ -204,14 +230,14 @@ export const gameSlice = createSlice({
       };
     },
     applyMulti(state: GameState, { payload }: PublishedGameActions) {
-      state = {
-        ...state,
-        uiMetadata: {
-          isPendingAction: false,
-          animate: undefined,
-        },
-      };
       for (const gameAction of payload) {
+        state = {
+          ...state,
+          uiMetadata: {
+            isPendingAction: false,
+            animate: undefined,
+          },
+        };
         switch (gameAction.type) {
           case "START":
             state = initGame(gameAction);
@@ -253,7 +279,9 @@ export const roll = (
 
   const random = alea(payload.ts);
   const rollDie = () => 1 + Math.floor(3 * random()); // 1, 2, or 3
-  let roll = rollDie() + rollDie() - player.hand.length;
+  const die1 = rollDie();
+  const die2 = rollDie();
+  let roll = die1 + die2 - player.hand.length;
   const steps = [];
   for (; roll > 0; --roll) {
     shift();
@@ -309,6 +337,8 @@ export const roll = (
       ...state.uiMetadata,
       animate: {
         kind: "roll",
+        playerId: player.id,
+        dice: [die1, die2],
         destination: dest,
         direction,
         steps,

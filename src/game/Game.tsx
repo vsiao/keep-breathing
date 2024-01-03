@@ -17,6 +17,7 @@ import Button from "../ui/Button";
 import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
 import Diver from "../ui/Diver";
 import { endGame } from "../db/DbRoom";
+import Dice from "../ui/Dice";
 
 type AnimationStage =
   | { kind: "initialRender" }
@@ -321,21 +322,21 @@ function Game({ roomId, userId }: { roomId?: string; userId?: string }) {
             </motion.div>
           )}
       </AnimatePresence>
-      {(game.uiMetadata.animate?.kind === "drop" && game.oxygen === 25) ||
-        (game.uiMetadata.animate?.kind === "beginRound" && (
-          <motion.div
-            className="Game-roundBanner"
-            initial={{ translateX: "-100%" }}
-            animate={{ translateX: [null, "0%", "0%", "100%"] }}
-            transition={{
-              times: [0, 0.1, 0.9, 1],
-              duration: 3,
-              ease: "circInOut",
-            }}
-          >
-            {`Round ${game.round}`}
-          </motion.div>
-        ))}
+      {((game.uiMetadata.animate?.kind === "drop" && game.oxygen === 25) ||
+        game.uiMetadata.animate?.kind === "beginRound") && (
+        <motion.div
+          className="Game-roundBanner"
+          initial={{ translateX: "-100%" }}
+          animate={{ translateX: [null, "0%", "0%", "100%"] }}
+          transition={{
+            times: [0, 0.1, 0.9, 1],
+            duration: 3,
+            ease: "circInOut",
+          }}
+        >
+          {`Round ${game.round}`}
+        </motion.div>
+      )}
       {game.currentTurn.phase === "gameOver" && (
         <div className="Game-gameOver">
           <div className="Game-gameOverCard">
