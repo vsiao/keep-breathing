@@ -17,7 +17,6 @@ import Button from "../ui/Button";
 import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
 import Diver from "../ui/Diver";
 import { endGame } from "../db/DbRoom";
-import Dice from "../ui/Dice";
 
 type AnimationStage =
   | { kind: "initialRender" }

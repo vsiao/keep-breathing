@@ -2,7 +2,6 @@ import classnames from "classnames";
 import { motion } from "framer-motion";
 import {
   PlayerState,
-  roll,
   selectCurrentPlayerId,
   selectRollState,
 } from "../store/gameSlice";
