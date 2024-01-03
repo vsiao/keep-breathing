@@ -220,7 +220,15 @@ function Game({ roomId, userId }: { roomId?: string; userId?: string }) {
       </LayoutGroup>
       {game.currentTurn.phase !== "gameOver" && (
         <div className="Game-minimap">
-          <span className="Game-oxygen">{game.oxygen}</span>
+          <motion.span
+            key={game.oxygen}
+            className="Game-oxygen"
+            initial={{ translateX: "-50%" }}
+            animate={{ scale: [null, 1.8, 1.8, 1] }}
+            transition={{ times: [0, 0.1, 0.9, 1], duration: 3 }}
+          >
+            {game.oxygen}
+          </motion.span>
           <span className="Game-round">round {game.round} of 3</span>
           <ol className="Game-depthIndicator">
             {game.path.map((s) => (
