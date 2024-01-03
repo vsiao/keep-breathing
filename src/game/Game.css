@@ -218,6 +218,7 @@
   flex-direction: column;
   justify-content: space-between;
   padding: 0.4em 0;
+  width: 0.4em;
 }
 
 .Game-depthLevel {
@@ -334,6 +335,17 @@
   display: flex;
   font-size: 0.3em;
   margin-left: 1em;
+}
+
+.Game-roundBanner {
+  background: white;
+  font-size: 2em;
+  position: absolute;
+  padding: 0.8em 0;
+  text-align: center;
+  top: 40vh;
+  width: 100vw;
+  z-index: 200;
 }
 
 .Game-gameOver {

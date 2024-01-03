@@ -15,7 +15,7 @@ function Diver({ player }: { player: PlayerState }) {
       })}
       initial={false}
       layout
-      layoutId={`diver_${player.color}`}
+      layoutId={`diver_${player.color}_${player.id}`}
       transition={{
         duration: 0.3,
         ease: "circOut",

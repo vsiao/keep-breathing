@@ -13,6 +13,11 @@ export const selectCurrentPlayerId = (state: RootState): string | undefined =>
     ? state.game.currentTurn.playerId
     : undefined;
 
+interface StartTurn {
+  phase: "start";
+  playerId: string;
+}
+
 interface RollTurn {
   phase: "roll";
   playerId: string;
@@ -28,6 +33,10 @@ interface DropTurn {
 }
 interface GameOver {
   phase: "gameOver";
+}
+
+interface BeginRoundAnimation {
+  kind: "beginRound";
 }
 
 interface RollAnimation {
@@ -47,7 +56,7 @@ interface DropAnimation {
 
 export interface GameState {
   round: number;
-  currentTurn: RollTurn | SearchTurn | DropTurn | GameOver;
+  currentTurn: StartTurn | RollTurn | SearchTurn | DropTurn | GameOver;
   oxygen: number;
   playerOrder: string[];
   players: Record<string, PlayerState>;
@@ -55,7 +64,11 @@ export interface GameState {
 
   uiMetadata: {
     isPendingAction: boolean;
-    animate?: RollAnimation | SearchAnimation | DropAnimation;
+    animate?:
+      | BeginRoundAnimation
+      | RollAnimation
+      | SearchAnimation
+      | DropAnimation;
   };
 }
 
@@ -151,24 +164,35 @@ const initGame = (payload: Published<StartPayload>): GameState => {
     path: allLoot.map((loot, i) => ({ id: `loot_${i}`, loot: [loot] })),
     uiMetadata: {
       isPendingAction: false,
-      animate: undefined,
+      animate: { kind: "beginRound" },
     },
   };
 };
 
+const BLANK_STATE: GameState = {
+  currentTurn: { phase: "start", playerId: "FAKE_ID" },
+  oxygen: 25,
+  path: [],
+  playerOrder: [],
+  players: {
+    FAKE_ID: {
+      color: "red",
+      direction: "down",
+      hand: [],
+      id: "FAKE_ID",
+      name: "Dipsy Diver",
+      position: -1,
+      score: [],
+    },
+  },
+  round: 1,
+  uiMetadata: {
+    isPendingAction: false,
+  },
+};
 export const gameSlice = createSlice({
   name: "game",
-  initialState: initGame({
-    players: [
-      {
-        color: "red",
-        id: "FAKE_USER",
-        name: "Dipsy Diver",
-      },
-    ],
-    ts: 0,
-    type: "START",
-  }),
+  initialState: BLANK_STATE,
   reducers: {
     setPendingAction(state) {
       return {
@@ -206,17 +230,7 @@ export const gameSlice = createSlice({
       return state;
     },
     resetGame(state) {
-      return initGame({
-        players: [
-          {
-            color: "red",
-            id: "FAKE_USER",
-            name: "Dipsy Diver",
-          },
-        ],
-        ts: 0,
-        type: "START",
-      });
+      return BLANK_STATE;
     },
   },
 });
@@ -500,9 +514,16 @@ const endRound = (state: GameState): GameState => {
         ]),
       ),
       path: state.path.filter((space) => space.loot.length > 0),
+
+      // drop animation takes precedence, but add new round animation otherwise
+      uiMetadata: state.uiMetadata.animate
+        ? state.uiMetadata
+        : {
+            ...state.uiMetadata,
+            animate: { kind: "beginRound" },
+          },
     };
   } else {
-    // TODO auto-drop maybe?
     return {
       ...state,
       currentTurn: {

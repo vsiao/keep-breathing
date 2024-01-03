@@ -35,7 +35,7 @@ function Game({ roomId, userId }: { roomId?: string; userId?: string }) {
     kind: "initialRender",
   });
 
-  const isGamePathLoaded = !!game?.path;
+  const isGamePathLoaded = !!game?.path.length;
   useLayoutEffect(() => {
     if (!gameRef.current || !isGamePathLoaded) {
       return;
@@ -181,32 +181,39 @@ function Game({ roomId, userId }: { roomId?: string; userId?: string }) {
           </Submarine>
           <div className="Game-path">
             <ol className="Game-loots">
-              {game.path.map((space, i) => (
-                <li
-                  className="Game-space"
-                  key={space.id}
-                  ref={(e) => setSpaceRef(i, e)}
-                >
-                  {space.loot.length > 0 ? (
-                    space.loot.map(({ id, level }, j) => (
-                      <Loot
-                        className="Game-spaceLoot"
-                        key={id}
-                        level={level}
-                        layoutId={id}
-                      />
-                    ))
-                  ) : (
-                    <span className="Game-blankSpace" />
-                  )}
-                  {game.uiMetadata.animate?.kind === "roll" &&
-                    game.uiMetadata.animate.steps.includes(i) &&
-                    renderStepIndicator(
-                      game.uiMetadata.animate.destination,
-                      game.uiMetadata.animate.steps.indexOf(i),
+              <AnimatePresence>
+                {game.path.map((space, i) => (
+                  <motion.li
+                    className="Game-space"
+                    key={space.id}
+                    ref={(e) => setSpaceRef(i, e)}
+                    exit={{ height: 0, margin: 0, opacity: 0 }}
+                    transition={{
+                      delay: game.uiMetadata.animate?.kind === "drop" ? 2 : 1,
+                    }}
+                  >
+                    {space.loot.length > 0 ? (
+                      space.loot.map(({ id, level }, j) => (
+                        <Loot
+                          className="Game-spaceLoot"
+                          key={id}
+                          level={level}
+                          layoutId={id}
+                          delay={game.uiMetadata.animate?.kind === "drop"}
+                        />
+                      ))
+                    ) : (
+                      <span className="Game-blankSpace" />
                     )}
-                </li>
-              ))}
+                    {game.uiMetadata.animate?.kind === "roll" &&
+                      game.uiMetadata.animate.steps.includes(i) &&
+                      renderStepIndicator(
+                        game.uiMetadata.animate.destination,
+                        game.uiMetadata.animate.steps.indexOf(i),
+                      )}
+                  </motion.li>
+                ))}
+              </AnimatePresence>
             </ol>
             <ol className="Game-players">
               {game.path.map(({ id, playerId }, i) => (
@@ -224,8 +231,13 @@ function Game({ roomId, userId }: { roomId?: string; userId?: string }) {
             key={game.oxygen}
             className="Game-oxygen"
             initial={{ translateX: "-50%" }}
-            animate={{ scale: [null, 1.8, 1.8, 1] }}
-            transition={{ times: [0, 0.1, 0.9, 1], duration: 3 }}
+            animate={{
+              scale: game.oxygen === 25 ? undefined : [null, 1.8, 1.8, 1],
+            }}
+            transition={{
+              times: [0, 0.1, 0.9, 1],
+              duration: 3,
+            }}
           >
             {game.oxygen}
           </motion.span>
@@ -281,32 +293,49 @@ function Game({ roomId, userId }: { roomId?: string; userId?: string }) {
         </ol>
       </motion.div>
       <AnimatePresence>
-        {roomId && game.currentTurn.phase !== "gameOver" && (
-          <motion.div
-            key={
-              game.currentTurn.playerId === userId
-                ? `${game.currentTurn.playerId}_${game.currentTurn.phase}`
-                : // Don't animate between other player's move phases
-                  game.currentTurn.playerId
-            }
-            className="Game-controls"
-            initial={{ translateY: "100%" }}
-            animate={{ translateY: 0 }}
-            transition={{
-              delay: !game.uiMetadata.animate
-                ? undefined
-                : game.uiMetadata.animate.kind === "roll"
-                  ? 2
-                  : 1,
-              ease: "circOut",
-            }}
-            exit={{ translateY: "100%", transition: { delay: 0 } }}
-            layout
-          >
-            {renderControls(game, roomId, userId)}
-          </motion.div>
-        )}
+        {roomId &&
+          game.currentTurn.phase !== "start" &&
+          game.currentTurn.phase !== "gameOver" && (
+            <motion.div
+              key={
+                game.currentTurn.playerId === userId
+                  ? `${game.currentTurn.playerId}_${game.currentTurn.phase}`
+                  : // Don't animate between other player's move phases
+                    game.currentTurn.playerId
+              }
+              className="Game-controls"
+              initial={{ translateY: "100%" }}
+              animate={{ translateY: 0 }}
+              transition={{
+                delay: !game.uiMetadata.animate
+                  ? undefined
+                  : game.uiMetadata.animate.kind === "roll"
+                    ? 2
+                    : 1,
+                ease: "circOut",
+              }}
+              exit={{ translateY: "100%", transition: { delay: 0 } }}
+              layout
+            >
+              {renderControls(game, roomId, userId)}
+            </motion.div>
+          )}
       </AnimatePresence>
+      {(game.uiMetadata.animate?.kind === "drop" && game.oxygen === 25) ||
+        (game.uiMetadata.animate?.kind === "beginRound" && (
+          <motion.div
+            className="Game-roundBanner"
+            initial={{ translateX: "-100%" }}
+            animate={{ translateX: [null, "0%", "0%", "100%"] }}
+            transition={{
+              times: [0, 0.1, 0.9, 1],
+              duration: 3,
+              ease: "circInOut",
+            }}
+          >
+            {`Round ${game.round}`}
+          </motion.div>
+        ))}
       {game.currentTurn.phase === "gameOver" && (
         <div className="Game-gameOver">
           <div className="Game-gameOverCard">
