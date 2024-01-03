@@ -1,0 +1,46 @@
+.Diver {
+  align-items: center;
+  display: inline-flex;
+  justify-content: center;
+  position: relative;
+}
+.Diver--currentTurn::before {
+  animation: 4s linear spin infinite;
+  border: 0.4em dotted white;
+  border-radius: 50%;
+  content: "";
+  display: block;
+  height: 2.8em;
+  position: absolute;
+  width: 2.8em;
+}
+.Diver--red.Diver--currentTurn::before {
+  border-color: var(--red);
+}
+.Diver--orange.Diver--currentTurn::before {
+  border-color: var(--orange);
+}
+.Diver--yellow.Diver--currentTurn::before {
+  border-color: var(--yellow);
+}
+.Diver--green.Diver--currentTurn::before {
+  border-color: var(--green);
+}
+.Diver--blue.Diver--currentTurn::before {
+  border-color: var(--blue);
+}
+.Diver--purple.Diver--currentTurn::before {
+  border-color: var(--purple);
+}
+
+.Diver-hand {
+  bottom: 100%;
+  display: flex;
+  font-size: 0.3em;
+  left: 100%;
+  position: absolute;
+}
+
+.Diver-loot + .Diver-loot {
+  margin-top: -3em;
+}

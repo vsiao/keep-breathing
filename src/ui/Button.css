@@ -12,3 +12,8 @@
 .Button:hover {
   background: white;
 }
+.Button[disabled] {
+  background: #849193 !important;
+  border: 0 !important;
+  color: var(--dark-blue) !important;
+}

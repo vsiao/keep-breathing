@@ -1,17 +1,25 @@
+.Loot {
+  display: inline-block;
+  position: relative;
+}
+
 .Loot-icon {
+  display: block;
+  height: 4em;
   filter: drop-shadow(0 0 1px black)
     drop-shadow(0 0 16px rgba(250, 130, 76, 0.8));
+  width: 4em;
 }
-.Loot-icon--level1 {
+.Loot--level1 .Loot-icon {
   fill: white;
 }
-.Loot-icon--level2 {
+.Loot--level2 .Loot-icon {
   fill: var(--light-blue);
 }
-.Loot-icon--level3 {
+.Loot--level3 .Loot-icon {
   fill: var(--med-blue);
 }
-.Loot-icon--level4 {
+.Loot--level4 .Loot-icon {
   fill: var(--dark-blue);
 }
 
@@ -19,4 +27,31 @@
   100% {
     transform: rotate(360deg);
   }
+}
+
+.Loot-value {
+  color: white;
+  font-size: 2em;
+  left: 50%;
+  padding: 0 0.05em;
+  position: absolute;
+  text-align: center;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+.Loot--level1 .Loot-value {
+  background: white;
+  color: var(--dark-blue);
+}
+.Loot--level2 .Loot-value {
+  background: var(--light-blue);
+  color: var(--dark-blue);
+}
+.Loot--level3 .Loot-value {
+  background: var(--med-blue);
+  color: white;
+}
+.Loot--level4 .Loot-value {
+  background: var(--dark-blue);
+  color: var(--orange);
 }

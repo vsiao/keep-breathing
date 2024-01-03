@@ -6,26 +6,12 @@ import "./Meeple.css";
 function Meeple({
   className,
   color,
-  layoutId,
 }: {
   className?: string;
   color: PlayerColor;
-  layoutId: string;
 }) {
   return (
-    <motion.div
-      className={className}
-      {...(layoutId
-        ? {
-            layout: true,
-            layoutId: `${layoutId}_${color}`,
-            transition: {
-              duration: 0.3,
-              ease: "circOut",
-            },
-          }
-        : null)}
-    >
+    <motion.div className={className}>
       <svg
         className={classnames({
           "Meeple-icon": true,
