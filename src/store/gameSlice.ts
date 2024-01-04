@@ -67,7 +67,7 @@ interface RollAnimation {
   kind: "roll";
   playerId: string;
   dice: [number, number];
-  destination: number;
+  destinationId: string;
   direction: "up" | "down";
   steps: number[];
 }
@@ -339,7 +339,7 @@ export const roll = (
         kind: "roll",
         playerId: player.id,
         dice: [die1, die2],
-        destination: dest,
+        destinationId: dest === -1 ? "submarine" : state.path[dest].id,
         direction,
         steps,
       },

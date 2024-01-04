@@ -34,6 +34,7 @@ export const useDbGameLogs = async (roomId?: string) => {
     return onChildAdded(logsRef, (log) => {
       console.debug(log.key, log.val());
       gameActionBuffer.push(log.val());
+      flushBuffer();
       clearTimeout(flushBufferTimer);
       flushBufferTimer = setTimeout(flushBuffer, 0);
     });
