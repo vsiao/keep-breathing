@@ -58,25 +58,28 @@ function Game({ roomId, userId }: { roomId?: string; userId?: string }) {
     game?.currentTurn?.phase === "gameOver"
       ? undefined
       : game?.players && game.players[game.currentTurn.playerId].position;
+  const currentSpaceId =
+    currentPlayerPosition === undefined
+      ? undefined
+      : currentPlayerPosition === -1
+        ? "submarine"
+        : game.path[currentPlayerPosition].id;
   useEffect(() => {
-    if (
-      animationStage.kind !== "complete" ||
-      currentPlayerPosition === undefined
-    ) {
+    if (animationStage.kind !== "complete" || currentSpaceId === undefined) {
       return;
     }
     // Auto-scroll if:
     // - current player is beginning a roll or drop turn
     // - previous action was a roll (implying current phase is search)
     const autoScroll = () => {
-      if (currentPlayerPosition < 0) {
+      if (currentSpaceId === "submarine") {
         window.scroll({ behavior: "smooth", top: 0 });
       }
       if (
         game.currentTurn.phase === "roll" ||
         game.currentTurn.phase === "drop"
       ) {
-        const spaceNode = spaceRefs.current.get(currentPlayerPosition);
+        const spaceNode = spaceRefs.current.get(currentSpaceId);
         if (!spaceNode) {
           return;
         }
@@ -87,8 +90,8 @@ function Game({ roomId, userId }: { roomId?: string; userId?: string }) {
           top: window.scrollY + top - (window.innerHeight - height) / 2,
         });
       } else if (game.uiMetadata.animate?.kind === "roll") {
-        const { destination, direction } = game.uiMetadata.animate;
-        const spaceNode = spaceRefs.current.get(destination);
+        const { destinationId, direction } = game.uiMetadata.animate;
+        const spaceNode = spaceRefs.current.get(destinationId);
         if (!spaceNode) {
           return;
         }
@@ -122,18 +125,18 @@ function Game({ roomId, userId }: { roomId?: string; userId?: string }) {
       autoScroll();
     }
   }, [
-    currentPlayerPosition,
+    currentSpaceId,
     game?.currentTurn?.phase,
     game?.uiMetadata?.animate,
     animationStage.kind,
   ]);
 
-  const spaceRefs = useRef(new Map<number, HTMLLIElement>());
-  const setSpaceRef = (i: number, e: HTMLLIElement | null) => {
+  const spaceRefs = useRef(new Map<string, HTMLLIElement>());
+  const setSpaceRef = (spaceId: string, e: HTMLLIElement | null) => {
     if (e) {
-      spaceRefs.current.set(i, e);
+      spaceRefs.current.set(spaceId, e);
     } else {
-      spaceRefs.current.delete(i);
+      spaceRefs.current.delete(spaceId);
     }
   };
 
@@ -175,9 +178,12 @@ function Game({ roomId, userId }: { roomId?: string; userId?: string }) {
             players={Object.values(game.players).filter((p) => p.position < 0)}
           >
             {game.uiMetadata.animate?.kind === "roll" &&
-              game.uiMetadata.animate.destination === -1 &&
+              game.uiMetadata.animate.destinationId === "submarine" &&
               game.uiMetadata.animate.steps.length > 0 &&
-              renderStepIndicator(-1, game.uiMetadata.animate.steps.length - 1)}
+              renderStepIndicator(
+                "submarine",
+                game.uiMetadata.animate.steps.length - 1,
+              )}
           </Submarine>
           <div className="Game-path">
             <ol className="Game-loots">
@@ -186,7 +192,7 @@ function Game({ roomId, userId }: { roomId?: string; userId?: string }) {
                   <motion.li
                     className="Game-space"
                     key={space.id}
-                    ref={(e) => setSpaceRef(i, e)}
+                    ref={(e) => setSpaceRef(space.id, e)}
                     exit={{ height: 0, margin: 0, opacity: 0 }}
                     transition={{
                       delay: game.uiMetadata.animate?.kind === "drop" ? 2 : 1,
@@ -208,7 +214,7 @@ function Game({ roomId, userId }: { roomId?: string; userId?: string }) {
                     {game.uiMetadata.animate?.kind === "roll" &&
                       game.uiMetadata.animate.steps.includes(i) &&
                       renderStepIndicator(
-                        game.uiMetadata.animate.destination,
+                        game.uiMetadata.animate.destinationId,
                         game.uiMetadata.animate.steps.indexOf(i),
                       )}
                   </motion.li>
@@ -393,10 +399,10 @@ function Game({ roomId, userId }: { roomId?: string; userId?: string }) {
 
 export default Game;
 
-const renderStepIndicator = (destination: number, order: number) => {
+const renderStepIndicator = (destinationId: string, order: number) => {
   return (
     <motion.span
-      key={destination}
+      key={destinationId}
       className="Game-stepIndicator"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
