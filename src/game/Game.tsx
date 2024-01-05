@@ -268,35 +268,45 @@ function Game({ roomId, userId }: { roomId?: string; userId?: string }) {
         </div>
       )}
       <motion.div className="Game-scoreCard" layout>
-        <ol className="Game-playerList">
-          {game.playerOrder.map((playerId) => {
-            const player = game.players[playerId];
-            return (
-              <li
-                key={playerId}
-                className={classnames(
-                  "Game-player",
-                  `Game-player--${player.color}`,
-                  {
-                    "Game-player--current":
-                      game.currentTurn.phase !== "gameOver" &&
-                      game.currentTurn.playerId === playerId,
-                  },
-                )}
-              >
-                {player.score.length > 0 && (
-                  <ol className="Game-playerScore">
-                    {player.score.map(([{ id, level, value }]) => (
-                      <li key={id}>
-                        <Loot level={level} value={value} layoutId={id} delay />
-                      </li>
-                    ))}
-                  </ol>
-                )}
-              </li>
-            );
-          })}
-        </ol>
+        <table className="Game-playerList">
+          <tbody>
+            {game.playerOrder.map((playerId) => {
+              const player = game.players[playerId];
+              return (
+                <tr
+                  key={playerId}
+                  className={classnames(
+                    "Game-player",
+                    `Game-player--${player.color}`,
+                    {
+                      "Game-player--current":
+                        game.currentTurn.phase !== "gameOver" &&
+                        game.currentTurn.playerId === playerId,
+                    },
+                  )}
+                >
+                  <th className="Game-playerName">{player.name}</th>
+                  {player.score.length > 0 && (
+                    <td>
+                      <ol className="Game-playerScore">
+                        {player.score.map(([{ id, level, value }]) => (
+                          <li key={id}>
+                            <Loot
+                              level={level}
+                              value={value}
+                              layoutId={id}
+                              delay
+                            />
+                          </li>
+                        ))}
+                      </ol>
+                    </td>
+                  )}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </motion.div>
       <AnimatePresence>
         {roomId &&

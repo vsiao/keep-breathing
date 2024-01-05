@@ -282,10 +282,6 @@
   padding: 0.4em;
 }
 
-.Game-player {
-  align-items: center;
-  display: flex;
-}
 .Game-player::before {
   border-radius: 50%;
   content: "";
@@ -315,6 +311,11 @@
   animation: 1s blink infinite;
 }
 
+.Game-playerName {
+  font-weight: 600;
+  padding: 0 0.4em;
+}
+
 @keyframes blink {
   0% {
     opacity: 1;
@@ -334,7 +335,6 @@
 .Game-playerScore {
   display: flex;
   font-size: 0.3em;
-  margin-left: 1em;
 }
 
 .Game-roundBanner {
