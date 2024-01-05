@@ -521,11 +521,10 @@ const endRound = (state: GameState): GameState => {
     };
   }
 
-  // ids of drowned divers sorted from deepest
+  // ids of drowned divers sorted from shallowest
   const drowned = state.path
     .map(({ playerId }) => playerId)
     .filter((id: string | undefined): id is string => id !== undefined);
-  drowned.reverse();
 
   if (drowned.length <= 0) {
     return {
@@ -534,7 +533,7 @@ const endRound = (state: GameState): GameState => {
         playerId:
           state.currentTurn.phase === "drop"
             ? // If divers drowned: the deepest diver goes first next round
-              state.currentTurn.drowned[0]
+              state.currentTurn.drowned[state.currentTurn.drowned.length - 1]
             : // Otherwise the last diver to return to submarine goes first
               state.currentTurn.playerId,
         phase: "roll",
