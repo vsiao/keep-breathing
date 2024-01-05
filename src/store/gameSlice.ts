@@ -531,8 +531,12 @@ const endRound = (state: GameState): GameState => {
     return {
       ...state,
       currentTurn: {
-        // Last diver to return to submarine goes first
-        playerId: state.currentTurn.playerId,
+        playerId:
+          state.currentTurn.phase === "drop"
+            ? // If divers drowned: the deepest diver goes first next round
+              state.currentTurn.drowned[0]
+            : // Otherwise the last diver to return to submarine goes first
+              state.currentTurn.playerId,
         phase: "roll",
       },
       round: state.round + 1,
