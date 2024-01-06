@@ -462,14 +462,14 @@ const drop = (state: GameState, payload: Published<DropPayload>): GameState => {
   };
   const drowned = currentTurn.drowned;
   const i = drowned.indexOf(player.id);
-  if (i === drowned.length - 1) {
-    return endTurn(state);
+  if (i === 0) {
+    return endRound(state);
   }
   return {
     ...state,
     currentTurn: {
       ...currentTurn,
-      playerId: drowned[i + 1],
+      playerId: drowned[i - 1],
     },
   };
 };
@@ -560,7 +560,7 @@ const endRound = (state: GameState): GameState => {
     return {
       ...state,
       currentTurn: {
-        playerId: drowned[0],
+        playerId: drowned[drowned.length - 1],
         phase: "drop",
         drowned,
       },

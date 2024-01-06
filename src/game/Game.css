@@ -340,7 +340,7 @@
 .Game-roundBanner {
   background: white;
   font-size: 2em;
-  position: absolute;
+  position: fixed;
   padding: 0.8em 0;
   text-align: center;
   top: 40vh;
